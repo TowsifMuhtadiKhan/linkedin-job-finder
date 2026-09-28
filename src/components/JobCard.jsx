@@ -1,0 +1,207 @@
+import { useState } from 'react'
+import {
+  Bookmark, BookmarkCheck, ExternalLink, MapPin, Clock,
+  Building2, Copy, Check, Send
+} from 'lucide-react'
+import { useSavedJobs } from '../hooks/useSavedJobs'
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays}d ago`
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  } catch { return dateStr }
+}
+
+// ── List view row ─────────────────────────────────────────────────────────────
+function JobRow({ job }) {
+  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
+  const [copied, setCopied] = useState(false)
+  const saved = isJobSaved(job.id)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(job.url).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="card px-4 py-3 flex items-center gap-4">
+      {/* Logo */}
+      {job.logo ? (
+        <img
+          src={job.logo}
+          alt=""
+          className="w-10 h-10 rounded border border-gray-100 object-contain shrink-0"
+          onError={(e) => (e.target.style.display = 'none')}
+        />
+      ) : (
+        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
+          <Building2 size={18} className="text-gray-400" />
+        </div>
+      )}
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-gray-900 text-sm truncate">{job.title}</p>
+        <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-gray-500">
+          {job.company && (
+            <span className="text-[#0077B5] font-medium">{job.company}</span>
+          )}
+          {job.location && (
+            <span className="flex items-center gap-0.5">
+              <MapPin size={10} /> {job.location}
+            </span>
+          )}
+          {job.postedDate && (
+            <span className="flex items-center gap-0.5">
+              <Clock size={10} /> {formatDate(job.postedDate)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => (saved ? unsaveJob(job.id) : saveJob(job))}
+          title={saved ? 'Remove favourite' : 'Save as favourite'}
+          className={`p-1.5 rounded-full transition-colors ${
+            saved ? 'text-[#0077B5] bg-[#E8F4FD]' : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
+          }`}
+        >
+          {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+        </button>
+        <button
+          onClick={handleCopy}
+          className="p-1.5 rounded border border-gray-200 text-gray-400 hover:text-[#0077B5] transition-colors"
+        >
+          {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+        </button>
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 bg-[#0077B5] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#004182] transition-colors"
+        >
+          <Send size={11} /> Apply
+        </a>
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:flex items-center gap-1.5 border border-[#0077B5] text-[#0077B5] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#E8F4FD] transition-colors"
+        >
+          <ExternalLink size={11} /> View
+        </a>
+      </div>
+    </div>
+  )
+}
+
+// ── Card view ─────────────────────────────────────────────────────────────────
+function JobCardView({ job }) {
+  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
+  const [copied, setCopied] = useState(false)
+  const saved = isJobSaved(job.id)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(job.url).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="card p-5 flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          {job.logo ? (
+            <img
+              src={job.logo}
+              alt=""
+              className="w-12 h-12 rounded-lg border border-gray-200 object-contain shrink-0"
+              onError={(e) => (e.target.style.display = 'none')}
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+              <Building2 size={22} className="text-gray-400" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
+              {job.title}
+            </h3>
+            {job.company && (
+              <p className="text-[#0077B5] text-sm font-medium mt-0.5 truncate">{job.company}</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => (saved ? unsaveJob(job.id) : saveJob(job))}
+          title={saved ? 'Remove favourite' : 'Save as favourite'}
+          className={`shrink-0 p-1.5 rounded-full transition-colors ${
+            saved
+              ? 'text-[#0077B5] bg-[#E8F4FD]'
+              : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
+          }`}
+        >
+          {saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+        </button>
+      </div>
+
+      {/* Meta */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {job.location && (
+          <span className="flex items-center gap-1 text-xs text-gray-500">
+            <MapPin size={12} /> {job.location}
+          </span>
+        )}
+        {job.postedDate && (
+          <span className="flex items-center gap-1 text-xs text-gray-500">
+            <Clock size={12} /> {formatDate(job.postedDate)}
+          </span>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#0077B5] text-white text-sm font-semibold py-2 rounded-full hover:bg-[#004182] transition-colors"
+        >
+          <Send size={14} /> Apply Now
+        </a>
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0077B5] hover:border-[#0077B5] transition-colors"
+          title="View on LinkedIn"
+        >
+          <ExternalLink size={15} />
+        </a>
+        <button
+          onClick={handleCopy}
+          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0077B5] transition-colors"
+          title="Copy link"
+        >
+          {copied ? <Check size={15} className="text-green-600" /> : <Copy size={15} />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Exported component ────────────────────────────────────────────────────────
+export default function JobCard({ job, viewMode = 'card' }) {
+  return viewMode === 'list' ? <JobRow job={job} /> : <JobCardView job={job} />
+}
