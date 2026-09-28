@@ -1,6 +1,7 @@
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Briefcase, Mail, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { isSupabaseConfigured } from '../lib/supabase'
 
@@ -16,7 +17,7 @@ export default function Auth() {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setSuccess('')
@@ -58,9 +59,7 @@ export default function Auth() {
     <div className="max-w-sm mx-auto py-12">
       {/* Logo */}
       <div className="text-center mb-8">
-        <div className="w-14 h-14 bg-[#0077B5] rounded-xl flex items-center justify-center mx-auto mb-4">
-          <Briefcase size={28} className="text-white" />
-        </div>
+        <img src="/logo.png" alt="LinkedIn Job Finder" width={80} height={80} className="w-20 h-20 object-contain mx-auto mb-4 rounded-xl" />
         <h1 className="text-2xl font-bold text-gray-900">LinkedIn Job Finder</h1>
         <p className="text-gray-500 text-sm mt-1">
           Sign in to save favourites &amp; keep results permanently

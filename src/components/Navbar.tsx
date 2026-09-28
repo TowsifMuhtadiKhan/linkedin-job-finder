@@ -1,5 +1,6 @@
+import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, BookmarkCheck, Settings, LogIn, LogOut, User } from 'lucide-react'
+import { Briefcase, BookmarkCheck, Settings, LogIn, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import useAppStore from '../store/useAppStore'
 import { useAuth } from '../hooks/useAuth'
@@ -10,9 +11,9 @@ export default function Navbar() {
   const { user, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const isActive = (to) => pathname === to
+  const isActive = (to: string) => pathname === to
 
-  const navLink = (to, label, Icon) => (
+  const navLink = (to: string, label: string, Icon: LucideIcon) => (
     <Link
       to={to}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
@@ -31,9 +32,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link to="/setup" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 bg-[#0077B5] rounded flex items-center justify-center">
-            <Briefcase size={16} className="text-white" />
-          </div>
+          <img src="/logo.png" alt="LinkedIn Job Finder" width={44} height={44} className="w-11 h-11 object-contain shrink-0" />
           <span className="font-bold text-gray-900 text-sm hidden sm:block">
             LinkedIn <span className="text-[#0077B5]">Job Finder</span>
           </span>

@@ -1,3 +1,4 @@
+import type { Job } from '../types'
 import { useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
@@ -40,7 +41,7 @@ export function useSavedJobs() {
   }, [user, setSavedJobs])
 
   const saveJob = useCallback(
-    async (job) => {
+    async (job: Job) => {
       saveLocal(job)
       if (user && supabase) {
         await supabase.from('saved_jobs').upsert({
@@ -59,7 +60,7 @@ export function useSavedJobs() {
   )
 
   const unsaveJob = useCallback(
-    async (jobId) => {
+    async (jobId: string) => {
       unsaveLocal(jobId)
       if (user && supabase) {
         await supabase

@@ -1,6 +1,7 @@
+import type { Job, ViewMode } from '../types'
 import JobCard from './JobCard'
 
-export default function JobList({ jobs, viewMode = 'card' }) {
+export default function JobList({ jobs, viewMode = 'card' }: { jobs: Job[]; viewMode?: ViewMode }) {
   if (!jobs || jobs.length === 0) return null
 
   if (viewMode === 'list') {

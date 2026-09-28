@@ -2,7 +2,7 @@ import { ExternalLink, Trash2, Send, BookmarkCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSavedJobs } from '../hooks/useSavedJobs'
 
-function formatDate(dateStr) {
+function formatDate(dateStr: string) {
   if (!dateStr) return ''
   try {
     return new Date(dateStr).toLocaleDateString('en-US', {

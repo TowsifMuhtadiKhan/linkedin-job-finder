@@ -1,3 +1,4 @@
+import type { Job, ViewMode } from '../types'
 import { useState } from 'react'
 import {
   Bookmark, BookmarkCheck, ExternalLink, MapPin, Clock,
@@ -5,12 +6,12 @@ import {
 } from 'lucide-react'
 import { useSavedJobs } from '../hooks/useSavedJobs'
 
-function formatDate(dateStr) {
+function formatDate(dateStr: string) {
   if (!dateStr) return ''
   try {
     const date = new Date(dateStr)
     const now = new Date()
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
     if (diffDays === 0) return 'Today'
     if (diffDays === 1) return 'Yesterday'
     if (diffDays < 7) return `${diffDays}d ago`
@@ -20,7 +21,7 @@ function formatDate(dateStr) {
 }
 
 // ── List view row ─────────────────────────────────────────────────────────────
-function JobRow({ job }) {
+function JobRow({ job }: { job: Job }) {
   const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
   const [copied, setCopied] = useState(false)
   const saved = isJobSaved(job.id)
@@ -39,7 +40,7 @@ function JobRow({ job }) {
           src={job.logo}
           alt=""
           className="w-10 h-10 rounded border border-gray-100 object-contain shrink-0"
-          onError={(e) => (e.target.style.display = 'none')}
+          onError={(e) => (e.currentTarget.style.display = 'none')}
         />
       ) : (
         <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
@@ -106,7 +107,7 @@ function JobRow({ job }) {
 }
 
 // ── Card view ─────────────────────────────────────────────────────────────────
-function JobCardView({ job }) {
+function JobCardView({ job }: { job: Job }) {
   const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
   const [copied, setCopied] = useState(false)
   const saved = isJobSaved(job.id)
@@ -127,7 +128,7 @@ function JobCardView({ job }) {
               src={job.logo}
               alt=""
               className="w-12 h-12 rounded-lg border border-gray-200 object-contain shrink-0"
-              onError={(e) => (e.target.style.display = 'none')}
+              onError={(e) => (e.currentTarget.style.display = 'none')}
             />
           ) : (
             <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
@@ -202,6 +203,6 @@ function JobCardView({ job }) {
 }
 
 // ── Exported component ────────────────────────────────────────────────────────
-export default function JobCard({ job, viewMode = 'card' }) {
+export default function JobCard({ job, viewMode = 'card' }: { job: Job; viewMode?: ViewMode }) {
   return viewMode === 'list' ? <JobRow job={job} /> : <JobCardView job={job} />
 }

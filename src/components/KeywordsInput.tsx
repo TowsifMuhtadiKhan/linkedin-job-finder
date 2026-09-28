@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react'
+interface Props { keywords?: string[]; onChange: (values: string[]) => void; placeholder?: string; label?: string; disabled?: boolean }
 import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 
@@ -6,21 +8,19 @@ import { X } from 'lucide-react'
  * Press Enter or comma to add a keyword.
  * Press Backspace to remove the last tag.
  */
-export default function KeywordsInput({ keywords = [], onChange }) {
+export default function KeywordsInput({ keywords = [], onChange, placeholder = 'Type keyword + Enter  (e.g. React, Python...)', label = 'Keywords', disabled = false }: Props) {
   const [inputValue, setInputValue] = useState('')
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const addKeyword = (raw) => {
-    const trimmed = raw.trim().replace(/,$/, '').trim()
-    if (trimmed && !keywords.includes(trimmed)) {
-      onChange([...keywords, trimmed])
-    }
+  const addKeyword = (raw: string) => {
+    const additions = raw.split(',').map((value) => value.trim()).filter(Boolean)
+    if (additions.length) onChange([...new Set([...keywords, ...additions])])
     setInputValue('')
   }
 
-  const removeKeyword = (kw) => onChange(keywords.filter((k) => k !== kw))
+  const removeKeyword = (kw: string) => onChange(keywords.filter((k) => k !== kw))
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       if (inputValue.trim()) addKeyword(inputValue)
@@ -42,6 +42,8 @@ export default function KeywordsInput({ keywords = [], onChange }) {
           {kw}
           <button
             type="button"
+            disabled={disabled}
+            aria-label={`Remove ${kw}`}
             onClick={(e) => { e.stopPropagation(); removeKeyword(kw) }}
             className="hover:text-red-500 transition-colors ml-0.5"
           >
@@ -53,6 +55,8 @@ export default function KeywordsInput({ keywords = [], onChange }) {
       <input
         ref={inputRef}
         type="text"
+        aria-label={label}
+        disabled={disabled}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -60,7 +64,7 @@ export default function KeywordsInput({ keywords = [], onChange }) {
         className="flex-1 min-w-[140px] text-sm outline-none bg-transparent"
         placeholder={
           keywords.length === 0
-            ? 'Type keyword + Enter  (e.g. React, Python...)'
+            ? placeholder
             : 'Add another...'
         }
       />

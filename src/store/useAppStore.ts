@@ -1,13 +1,26 @@
+import type { Job, LinkedInProfile, SearchCriteria, ViewMode } from '../types'
+interface AppState {
+  linkedinToken: string; setLinkedinToken: (token: string) => void; clearLinkedinToken: () => void
+  profile: LinkedInProfile | null; setProfile: (profile: LinkedInProfile) => void; clearProfile: () => void
+  criteria: SearchCriteria; setCriteria: (criteria: SearchCriteria) => void
+  updateCriteria: <K extends keyof SearchCriteria>(key: K, value: SearchCriteria[K]) => void
+  resetCriteria: () => void
+  jobs: Job[]; setJobs: (jobs: Job[]) => void; totalJobs: number; setTotalJobs: (n: number) => void
+  searchTimestamp: number | null; setSearchTimestamp: (ts: number) => void; clearJobs: () => void
+  viewMode: ViewMode; setViewMode: (mode: ViewMode) => void
+  savedJobs: Job[]; setSavedJobs: (jobs: Job[]) => void; saveJob: (job: Job) => void
+  unsaveJob: (id: string) => void; isJobSaved: (id: string) => boolean
+}
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const normalizeKeywords = (kw) => {
+const normalizeKeywords = (kw: SearchCriteria['keywords']) => {
   if (Array.isArray(kw)) return kw
   if (typeof kw === 'string' && kw.trim()) return [kw.trim()]
   return []
 }
 
-const useAppStore = create(
+const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // ── LinkedIn Token ─────────────────────────────────────────────
@@ -15,9 +28,6 @@ const useAppStore = create(
       setLinkedinToken: (token) => set({ linkedinToken: token }),
       clearLinkedinToken: () => set({ linkedinToken: '' }),
 
-      // ── RapidAPI Key (for JSearch job search) ──────────────────────
-      rapidApiKey: '',
-      setRapidApiKey: (key) => set({ rapidApiKey: key }),
 
       // ── LinkedIn Profile ───────────────────────────────────────────
       profile: null,
@@ -72,7 +82,6 @@ const useAppStore = create(
       name: 'linkedin-job-finder-v2',
       partialize: (state) => ({
         linkedinToken: state.linkedinToken,
-        rapidApiKey: state.rapidApiKey,
         profile: state.profile,
         criteria: state.criteria,
         savedJobs: state.savedJobs,

@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const EXPIRY_MS = 10 * 60 * 1000
 
-function formatTimeLeft(ms) {
+function formatTimeLeft(ms: number) {
   if (ms <= 0) return '0:00'
   const s = Math.floor(ms / 1000)
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
@@ -22,7 +22,7 @@ export default function Results() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const {
-    jobs, criteria, linkedinToken, rapidApiKey,
+    jobs, criteria, linkedinToken,
     setJobs, setTotalJobs, searchTimestamp, setSearchTimestamp,
     clearJobs, viewMode, setViewMode,
   } = useAppStore()
@@ -32,7 +32,7 @@ export default function Results() {
   const [showFilters, setShowFilters] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(1)
-  const [timeLeft, setTimeLeft] = useState(null)
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
   // 10-min expiry timer (guests only)
   useEffect(() => {
@@ -56,19 +56,20 @@ export default function Results() {
     setError('')
 
     try {
-      const result = await searchJobs(criteria, linkedinToken, rapidApiKey, newPage)
+      const result = await searchJobs(criteria, linkedinToken, newPage)
       const newJobs = result.jobs || []
       if (newPage === 1) {
         setJobs(newJobs)
         setSearchTimestamp(Date.now())
         setPage(1)
       } else {
-        setJobs([...jobs, ...newJobs])
+        setJobs([...new Map([...jobs, ...newJobs].map((job) => [job.id, job])).values()])
       }
-      setHasMore(result.hasMore ?? newJobs.length === 10)
+      setPage(newPage)
+      setHasMore(result.hasMore ?? newJobs.length > 0)
       setTotalJobs(result.total || newJobs.length)
     } catch (err) {
-      setError(err.message || 'Failed to fetch jobs.')
+      setError((err instanceof Error ? err.message : '') || 'Failed to fetch jobs.')
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +77,6 @@ export default function Results() {
 
   const handleLoadMore = () => {
     const nextPage = page + 1
-    setPage(nextPage)
     handleSearch(nextPage)
   }
 
@@ -142,7 +142,9 @@ export default function Results() {
               <span className="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">🌐 Remote</span>
             )}
             {criteria.location && !criteria.remote && (
-              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">📍 {criteria.location}</span>
+              criteria.location.split(',').map((location) => location.trim()).filter(Boolean).map((location) => (
+                <span key={location} className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">📍 {location}</span>
+              ))
             )}
           </div>
         </div>

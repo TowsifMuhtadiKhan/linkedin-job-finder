@@ -1,3 +1,4 @@
+import type { FormEvent } from 'react'
 import { SlidersHorizontal, RotateCcw } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import KeywordsInput from './KeywordsInput'
@@ -28,10 +29,10 @@ const DATE_OPTIONS = [
   { value: 'month', label: 'Past month' },
 ]
 
-export default function CriteriaForm({ onSearch, isLoading }) {
+export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => void; isLoading: boolean }) {
   const { criteria, updateCriteria, resetCriteria } = useAppStore()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     onSearch?.()
   }
@@ -69,15 +70,18 @@ export default function CriteriaForm({ onSearch, isLoading }) {
 
         {/* Location */}
         <div>
-          <label className="label text-xs sm:text-sm">Location</label>
-          <input
-            type="text"
-            className="input-field text-sm"
-            placeholder="e.g. New York, London, Remote"
-            value={criteria.location}
-            onChange={(e) => updateCriteria('location', e.target.value)}
+          <label className="label text-xs sm:text-sm">
+            Location
+            <span className="text-gray-400 font-normal ml-1 hidden sm:inline">(Enter or comma to add)</span>
+          </label>
+          <KeywordsInput
+            label="Location"
+            placeholder="Type location + Enter (e.g. Bangladesh, London...)"
+            keywords={(criteria.location || '').split(',').map((value) => value.trim()).filter(Boolean)}
+            onChange={(locations) => updateCriteria('location', locations.join(', '))}
             disabled={criteria.remote}
           />
+          <p className="text-xs text-gray-400 mt-1 sm:hidden">Press Enter or comma to add each location</p>
         </div>
 
         {/* Remote toggle */}

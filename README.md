@@ -1,115 +1,140 @@
-# 💼 LinkedIn Job Finder
+# LinkedIn Job Finder
 
-A React + Supabase app that lets you paste your LinkedIn access token, set job search criteria, and instantly browse matching LinkedIn jobs with direct links.
+<img src="public/logo.png" alt="LinkedIn Job Finder logo" width="160" />
 
----
+Find LinkedIn job listings across multiple roles and locations, compare opportunities, and bookmark jobs you want to revisit.
 
-## ✨ Features
+Built with **React, TypeScript, Vite, and Supabase**.
 
-- 🔑 **LinkedIn token auth** — paste your token, optionally see your profile info
-- 🔍 **Rich search filters** — keywords, location, job type, experience level, date posted, remote toggle
-- 🃏 **Job cards** — title, company, location, date, direct LinkedIn link
-- 🔖 **Bookmark jobs** — save jobs locally (or to Supabase DB when configured)
-- 📄 **Load more** — paginated results
-- ⚡ **Works offline-first** — localStorage fallback when Supabase is not configured
+## About the project
 
----
+Job searching often involves repeating searches for different titles and places. LinkedIn Job Finder brings those criteria into one interface so you can discover and organize opportunities more easily.
 
-## 🚀 Quick Start
+For example, search for **React Developer** and **Software Engineer** in **Bangladesh** and **London**, then narrow the results to **full-time roles posted in the past week**.
 
-### 1. Install dependencies
+The app links you to original listings. It does not submit applications on your behalf.
+
+## Features
+
+- **Keyword chips:** Add multiple job titles or skills with Enter or comma.
+- **Location chips:** Search several locations and combine results without duplicate job IDs.
+- **Search filters:** Filter by remote work, job type, experience, and posting date.
+- **Card and list views:** Choose how you browse job details.
+- **Direct links:** Open listings, follow application links, or copy job URLs.
+- **Bookmarks:** Save jobs locally, with Supabase synchronization when signed in and configured.
+- **Email accounts:** Register and sign in through Supabase Auth.
+- **Guest access:** Search without an account; guest results expire after 10 minutes.
+- **Responsive interface:** Browse on desktop or mobile.
+
+**No JSearch or RapidAPI subscription is required.** A LinkedIn access token is optional and is used for profile lookup, not job search.
+
+## How to use it
+
+1. Open **Setup**. Sign in to synchronize bookmarks, or continue as a guest.
+2. Add at least one **keyword**. Press Enter or comma to create a chip.
+3. Add your preferred **locations**, or leave the field empty for a broader search.
+4. Choose your filters and select **Search Jobs**.
+5. Browse results in card or list view. Select **Load more** for additional listings.
+6. Bookmark opportunities and revisit them in **Saved**.
+7. Select **Apply** or **View** to open the original listing.
+
+A **remote** location chip runs a separate remote search. The **Remote only** switch applies the remote filter to every selected location.
+
+## Technology
+
+| Technology | Purpose |
+| --- | --- |
+| React and TypeScript | User interface and typed application logic |
+| Vite | Local development and production builds |
+| Tailwind CSS | Responsive styling |
+| Zustand | Application state and local persistence |
+| Supabase Auth | Email registration and sign-in |
+| Supabase Postgres | Saved jobs with row-level security |
+| Supabase Edge Functions | Production job-search proxy |
+
+The app extracts listings from LinkedIn's public guest search pages. Local development uses a Vite proxy; production builds use the **search-jobs** Supabase Edge Function.
+
+## Run locally
+
+Install Node.js compatible with the Vite version in `package.json`, npm, and Git. Then run:
+
 ```bash
-npm install
-```
-
-### 2. Configure environment (optional but recommended)
-```bash
-cp .env.example .env
-```
-Edit `.env` with your Supabase project credentials:
-```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### 3. Run the dev server
-```bash
+git clone https://github.com/TowsifMuhtadiKhan/linkedin-job-finder.git
+cd linkedin-job-finder
+npm ci
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000)
 
----
+Open the address printed in the terminal, normally **http://localhost:3000**.
 
-## 🔑 Getting a LinkedIn Access Token
+Local search works without Supabase. To enable accounts and database-backed bookmarks, copy `.env.example` to `.env` and set:
 
-1. Go to [LinkedIn Developer Portal](https://developer.linkedin.com/) → **Create App**
-2. Request these OAuth scopes: `openid`, `profile`, `email`
-3. Use the **OAuth 2.0 Authorization Code flow** to get an access token
-4. Paste the token in the app's Setup page
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLISHABLE_OR_ANON_KEY
+```
 
-> **Note**: LinkedIn's official Job Search API is partner-only. Job listings are fetched via LinkedIn's guest API (no auth required for search, token is used for profile verification).
+Use a publishable or legacy anon key, never a secret or service-role key. Restart the development server after changing these values.
 
----
+For a new Supabase database, run [001_init.sql](supabase/migrations/001_init.sql) once in the SQL Editor. Rerunning the script can produce an already-existing-policy error.
 
-## ☁️ Supabase Setup (optional)
+## Deployment
 
-Supabase enables:
-- Server-side LinkedIn API proxy (avoids CORS)
-- Saved jobs synced across devices
-- Search criteria presets
+The included [vercel.json](vercel.json) configures the frontend build and application routes.
 
-### Steps:
-1. Create a project at [supabase.com](https://app.supabase.com)
-2. Copy **Project URL** and **anon key** into your `.env`
-3. Run the SQL migration in the Supabase SQL editor:
-   ```
-   supabase/migrations/001_init.sql
-   ```
-4. Deploy the Edge Function:
+1. Push your changes to GitHub and import the repository into Vercel.
+2. Select **Vite**, use **npm run build**, and set the output directory to **dist**.
+3. Add the two environment variables above to Vercel and deploy.
+4. Deploy the search backend to the same Supabase project:
+
    ```bash
-   npx supabase functions deploy search-jobs
+   npx supabase login
+   npx supabase functions deploy search-jobs --project-ref YOUR_PROJECT_REF --use-api --no-verify-jwt
    ```
 
----
+   This supports guest searches without requiring a signed-in session.
 
-## 📁 Project Structure
+5. Set the Supabase Auth **Site URL** to your deployed address for email confirmations.
+6. Test sign-in, search, bookmarks, and refreshing a route such as `/results`.
 
-```
+Vercel does not run the local Vite proxy. Production search needs the deployed Edge Function.
+
+See the [Vercel Vite guide](https://vercel.com/docs/frameworks/frontend/vite) and [Supabase URL configuration guide](https://supabase.com/docs/guides/auth/redirect-urls).
+
+## Development commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start development with the local search proxy |
+| `npm run typecheck` | Run strict frontend TypeScript checks |
+| `npm run lint` | Check code quality |
+| `npm run build` | Type-check and create the production build |
+| `npm run preview` | Preview production locally; search uses Supabase |
+
+The Edge Function uses Deno TypeScript and is separate from the frontend type check.
+
+## Project structure
+
+```text
 src/
-├── components/
-│   ├── Navbar.jsx          # Top navigation bar
-│   ├── TokenInput.jsx      # LinkedIn token entry + verification
-│   ├── CriteriaForm.jsx    # Job search filters form
-│   ├── JobCard.jsx         # Individual job listing card
-│   └── JobList.jsx         # Responsive grid of job cards
-├── pages/
-│   ├── Setup.jsx           # Token + criteria setup page
-│   ├── Results.jsx         # Job results with pagination
-│   └── Saved.jsx           # Bookmarked jobs
-├── hooks/
-│   └── useJobSearch.js     # Search logic + LinkedIn HTML parser
-├── store/
-│   └── useAppStore.js      # Zustand global state (persisted)
-└── lib/
-    └── supabase.js         # Supabase client
-
+  components/       Search controls, navigation, and job cards
+  pages/            Setup, results, authentication, and saved jobs
+  hooks/            Search, authentication, and bookmark logic
+  lib/              Supabase client and local search
+  store/            Application state and persistence
+  types.ts          Shared application and database types
 supabase/
-├── functions/
-│   └── search-jobs/        # Edge Function: LinkedIn proxy
-└── migrations/
-    └── 001_init.sql        # DB schema (saved_jobs, user_criteria)
+  functions/        Production search function
+  migrations/       Database tables and policies
+vite.config.ts      Local development configuration
+vercel.json         Frontend deployment configuration
 ```
 
----
+## Current limitations
 
-## 🛠️ Tech Stack
+- Listings depend on LinkedIn's availability and page structure. Searches can be blocked or rate-limited.
+- Search results are held in memory and disappear on reload, even when signed in. Bookmark jobs you want to keep.
+- The database includes a criteria table, but the interface does not yet offer saved search presets.
+- A missing production function can appear as a CORS error or a failed Edge Function request.
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + Vite |
-| Styling | Tailwind CSS |
-| State | Zustand (persisted) |
-| Routing | React Router v6 |
-| Backend | Supabase Edge Functions (Deno) |
-| Database | Supabase Postgres + RLS |
-| Icons | Lucide React |
+This is an independent project and is not affiliated with or endorsed by LinkedIn.

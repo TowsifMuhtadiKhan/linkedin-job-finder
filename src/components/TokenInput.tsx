@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Key, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Key, CheckCircle, Loader2 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { fetchLinkedInProfile } from '../hooks/useJobSearch'
 
