@@ -15,6 +15,8 @@ export interface Job {
   url: string
   logo: string | null
   savedAt?: string
+  appliedAt?: string | null
+  deadline?: string | null
 }
 export interface LinkedInProfile { name: string; email?: string; picture?: string }
 export interface SearchResult { jobs: Job[]; total: number; hasMore: boolean }
@@ -22,13 +24,14 @@ export type ViewMode = 'card' | 'list'
 export type SavedJobRow = {
   id: string; user_id: string; job_id: string; title: string; company: string | null
   location: string | null; url: string; logo: string | null; posted_date: string | null; saved_at: string
+  applied_at: string | null; deadline: string | null
 }
 export interface Database {
   public: {
     Tables: {
       saved_jobs: {
         Row: SavedJobRow
-        Insert: Omit<SavedJobRow, 'id' | 'saved_at'> & { id?: string; saved_at?: string }
+        Insert: Omit<SavedJobRow, 'id' | 'saved_at' | 'applied_at' | 'deadline'> & { id?: string; saved_at?: string; applied_at?: string | null; deadline?: string | null }
         Update: Partial<SavedJobRow>
         Relationships: []
       }

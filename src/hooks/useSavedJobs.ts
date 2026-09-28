@@ -10,7 +10,7 @@ import { useAuth } from './useAuth'
  * - When not logged in: uses localStorage via Zustand
  */
 export function useSavedJobs() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { savedJobs, saveJob: saveLocal, unsaveJob: unsaveLocal, isJobSaved, setSavedJobs } =
     useAppStore()
 
@@ -34,6 +34,8 @@ export function useSavedJobs() {
             logo: row.logo,
             postedDate: row.posted_date,
             savedAt: row.saved_at,
+            appliedAt: row.applied_at,
+            deadline: row.deadline,
           }))
           setSavedJobs(mapped)
         }
@@ -53,7 +55,9 @@ export function useSavedJobs() {
           url: job.url,
           logo: job.logo || null,
           posted_date: job.postedDate || null,
-        })
+          applied_at: job.appliedAt || null,
+          deadline: job.deadline || null,
+        }, { onConflict: 'user_id,job_id', ignoreDuplicates: true })
       }
     },
     [user, saveLocal]
@@ -73,5 +77,19 @@ export function useSavedJobs() {
     [user, unsaveLocal]
   )
 
-  return { savedJobs, saveJob, unsaveJob, isJobSaved }
+  const updateSavedJob = useCallback(async (jobId: string, changes: Pick<Job, 'appliedAt' | 'deadline'>) => {
+    if (authLoading) throw new Error('Please wait for your account to finish loading.')
+    if (user && supabase) {
+      const updates = {
+        ...(changes.appliedAt !== undefined ? { applied_at: changes.appliedAt } : {}),
+        ...(changes.deadline !== undefined ? { deadline: changes.deadline } : {}),
+      }
+      const { data, error } = await supabase.from('saved_jobs').update(updates)
+        .eq('user_id', user.id).eq('job_id', jobId).select('job_id').single()
+      if (error || !data) throw new Error('Could not save your changes. Please try again.')
+    }
+    useAppStore.getState().updateSavedJob(jobId, changes)
+  }, [user, authLoading])
+
+  return { savedJobs, saveJob, unsaveJob, isJobSaved, updateSavedJob, authLoading }
 }

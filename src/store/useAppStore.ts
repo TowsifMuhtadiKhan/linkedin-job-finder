@@ -10,6 +10,7 @@ interface AppState {
   viewMode: ViewMode; setViewMode: (mode: ViewMode) => void
   savedJobs: Job[]; setSavedJobs: (jobs: Job[]) => void; saveJob: (job: Job) => void
   unsaveJob: (id: string) => void; isJobSaved: (id: string) => boolean
+  updateSavedJob: (id: string, changes: Pick<Job, 'appliedAt' | 'deadline'>) => void
 }
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -77,6 +78,9 @@ const useAppStore = create<AppState>()(
       unsaveJob: (jobId) =>
         set({ savedJobs: get().savedJobs.filter((j) => j.id !== jobId) }),
       isJobSaved: (jobId) => get().savedJobs.some((j) => j.id === jobId),
+      updateSavedJob: (jobId, changes) => set((state) => ({
+        savedJobs: state.savedJobs.map((job) => job.id === jobId ? { ...job, ...changes } : job),
+      })),
     }),
     {
       name: 'linkedin-job-finder-v2',
