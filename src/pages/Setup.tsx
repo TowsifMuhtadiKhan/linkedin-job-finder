@@ -1,15 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, Info, LogIn } from 'lucide-react'
-import TokenInput from '../components/TokenInput'
+import { AlertCircle } from 'lucide-react'
 import CriteriaForm from '../components/CriteriaForm'
 import { searchJobs } from '../hooks/useJobSearch'
+import { recordSearchKeywords } from '../lib/keywordService'
 import useAppStore from '../store/useAppStore'
-import { useAuth } from '../hooks/useAuth'
 
 export default function Setup() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const { linkedinToken, criteria, setJobs, setTotalJobs, setSearchTimestamp } =
     useAppStore()
   const [isLoading, setIsLoading] = useState(false)
@@ -20,6 +18,12 @@ export default function Setup() {
       ? criteria.keywords.length > 0
       : !!criteria.keywords
     if (!hasKeywords) return
+
+    // Save search keywords & locations to the crowdsourced database
+    void recordSearchKeywords(criteria.keywords, 'keyword')
+    if (criteria.location) {
+      void recordSearchKeywords(criteria.location, 'location')
+    }
 
     setIsLoading(true)
     setError('')
@@ -42,36 +46,12 @@ export default function Setup() {
       {/* Header */}
       <div className="text-center py-3 sm:py-4">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5">
-          Find Your Next <span className="text-[#0077B5]">LinkedIn Job</span>
+          Find Your Next <span className="text-[#0077B5]">Job</span>
         </h1>
         <p className="text-gray-500 text-sm">
-          Set your criteria to find matching jobs with direct apply links.
+          Search matching jobs across LinkedIn &amp; Bdjobs with direct apply links.
         </p>
       </div>
-
-      {/* Auth status */}
-      {!user ? (
-        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-xs sm:text-sm">
-          <Info size={15} className="mt-0.5 shrink-0" />
-          <div>
-            <strong>Not signed in</strong> — results disappear after 10 min.{' '}
-            <button
-              onClick={() => navigate('/auth')}
-              className="underline font-semibold hover:no-underline inline-flex items-center gap-1"
-            >
-              <LogIn size={11} /> Sign in
-            </button>{' '}
-            to keep them permanently.
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-2.5 text-sm">
-          ✅ Signed in as <strong className="truncate">{user.email}</strong>
-        </div>
-      )}
-
-{/* LinkedIn Token (optional) */}
-      <TokenInput />
 
       {/* Criteria */}
       <CriteriaForm onSearch={handleSearch} isLoading={isLoading} />
@@ -84,7 +64,16 @@ export default function Setup() {
         </div>
       )}
 
-
+      {/* Optional link to Profile */}
+      <div className="text-center pt-2 pb-4">
+        <button
+          type="button"
+          onClick={() => navigate('/profile')}
+          className="text-xs text-gray-400 hover:text-[#0077B5] transition-colors inline-flex items-center gap-1"
+        >
+          LinkedIn Developer Token (Optional) is located in Profile settings →
+        </button>
+      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, BookmarkCheck, Settings, LogIn, LogOut, UserRound } from 'lucide-react'
+import { Briefcase, BookmarkCheck, LogIn, LogOut, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import useAppStore from '../store/useAppStore'
 import { useAuth } from '../hooks/useAuth'
@@ -11,21 +11,22 @@ export default function Navbar() {
   const { user, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const isActive = (to: string) => pathname === to
+  const isJobsActive =
+    pathname === '/' || pathname === '/results' || pathname === '/setup' || pathname === '/jobs'
 
-  const navLink = (to: string, label: string, Icon: LucideIcon) => (
+  const navLink = (to: string, label: string, Icon: LucideIcon, active: boolean) => (
     <Link
       to={to}
       aria-label={label}
       title={label}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-        isActive(to)
-          ? 'bg-[#E8F4FD] text-[#0077B5]'
-          : 'text-gray-600 hover:text-[#0077B5] hover:bg-gray-100'
+      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+        active
+          ? 'bg-[#F0F7FF] text-[#0A66C2]'
+          : 'text-gray-600 hover:text-[#0A66C2] hover:bg-gray-100'
       }`}
     >
       <Icon size={15} />
-      <span className="hidden sm:inline">{label}</span>
+      <span>{label}</span>
     </Link>
   )
 
@@ -33,50 +34,61 @@ export default function Navbar() {
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/setup" className="flex items-center gap-2 shrink-0">
-          <img src="/logo.png" alt="LinkedIn Job Finder" width={44} height={44} className="w-11 h-11 object-contain shrink-0" />
-          <span className="font-bold text-gray-900 text-sm hidden sm:block">
-            LinkedIn <span className="text-[#0077B5]">Job Finder</span>
-          </span>
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <img
+            src="/logo.png"
+            alt="Job Finder"
+            width={44}
+            height={44}
+            className="w-10 h-10 object-contain shrink-0"
+          />
+          <div className="hidden sm:block">
+            <span className="font-bold text-gray-900 text-sm">
+              Job <span className="text-[#0A66C2]">Finder</span>
+            </span>
+            <span className="block text-[10px] text-gray-400 font-medium leading-none">
+              LinkedIn &amp; Bdjobs
+            </span>
+          </div>
         </Link>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-1">
-          {navLink('/setup', 'Setup', Settings)}
-          {navLink('/results', 'Jobs', Briefcase)}
-          {navLink('/profile', 'Profile', UserRound)}
+        {/* Center Nav links: Jobs and My Jobs */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {navLink('/', 'Jobs', Briefcase, isJobsActive)}
 
-          {/* Saved with badge */}
+          {/* My Jobs with badge */}
           <Link
             to="/saved"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors relative ${
-              isActive('/saved')
-                ? 'bg-[#E8F4FD] text-[#0077B5]'
-                : 'text-gray-600 hover:text-[#0077B5] hover:bg-gray-100'
+            aria-label="My Jobs"
+            title="My Jobs"
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors relative ${
+              pathname === '/saved'
+                ? 'bg-[#F0F7FF] text-[#0A66C2]'
+                : 'text-gray-600 hover:text-[#0A66C2] hover:bg-gray-100'
             }`}
           >
             <BookmarkCheck size={15} />
-            <span className="hidden sm:inline">Saved</span>
+            <span>My Jobs</span>
             {savedJobs.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#0077B5] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+              <span className="bg-[#0A66C2] text-white text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center leading-none">
                 {savedJobs.length > 9 ? '9+' : savedJobs.length}
               </span>
             )}
           </Link>
         </div>
 
-        {/* User area */}
+        {/* User Area: Profile & Account */}
         <div className="flex items-center gap-2 shrink-0">
           {user ? (
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu((v) => !v)}
-                className="flex items-center gap-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200 cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-full bg-[#0077B5] text-white text-xs font-bold flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#0A66C2] text-white text-xs font-bold flex items-center justify-center shadow-xs">
                   {user.email?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className="text-sm text-gray-700 font-medium hidden md:block max-w-[120px] truncate">
+                <span className="text-xs text-gray-700 font-medium hidden md:block max-w-[120px] truncate">
                   {user.email}
                 </span>
               </button>
@@ -88,13 +100,37 @@ export default function Navbar() {
                     onClick={() => setShowUserMenu(false)}
                   />
                   <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-xs text-gray-400">Signed in as</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+                    <div className="px-4 py-2.5 border-b border-gray-100">
+                      <p className="text-[11px] text-gray-400">Signed in as</p>
+                      <p className="text-xs font-semibold text-gray-900 truncate">{user.email}</p>
                     </div>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      <UserRound size={14} className="text-[#0A66C2]" />
+                      Profile &amp; Settings
+                    </Link>
+
+                    <Link
+                      to="/saved"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      <BookmarkCheck size={14} className="text-[#0A66C2]" />
+                      My Jobs ({savedJobs.length})
+                    </Link>
+
+                    <div className="border-t border-gray-100 my-0.5" />
+
                     <button
-                      onClick={async () => { await signOut(); setShowUserMenu(false) }}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={async () => {
+                        await signOut()
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors font-medium cursor-pointer"
                     >
                       <LogOut size={14} />
                       Sign Out
@@ -104,13 +140,28 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link
-              to="/auth"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#0077B5] text-white hover:bg-[#004182] transition-colors"
-            >
-              <LogIn size={14} />
-              <span className="hidden sm:inline">Sign In</span>
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link
+                to="/profile"
+                title="Profile & Settings"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                  pathname === '/profile'
+                    ? 'bg-[#F0F7FF] text-[#0A66C2]'
+                    : 'text-gray-600 hover:text-[#0A66C2] hover:bg-gray-100'
+                }`}
+              >
+                <UserRound size={15} />
+                <span className="hidden sm:inline">Profile</span>
+              </Link>
+
+              <Link
+                to="/auth"
+                className="flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-[#0A66C2] text-white hover:bg-[#004182] transition-colors shadow-xs"
+              >
+                <LogIn size={13} />
+                <span>Sign In</span>
+              </Link>
+            </div>
           )}
         </div>
       </div>

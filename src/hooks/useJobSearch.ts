@@ -1,4 +1,4 @@
-import type { SearchCriteria, SearchResult, LinkedInProfile } from '../types'
+import type { SearchCriteria, SearchResult, LinkedInProfile, Job } from '../types'
 import { supabase } from '../lib/supabase'
 import { searchLocalLinkedIn } from '../lib/linkedinSearch'
 
@@ -13,15 +13,50 @@ export async function searchJobs(criteria: SearchCriteria, token: string, page =
       throw new Error(detail?.error || 'Bdjobs search failed. Please try again.')
     }
     if (!Array.isArray(data?.jobs)) throw new Error('Bdjobs returned an invalid result.')
-    return data
+    const jobs = (data.jobs as Job[]).map((job) => ({
+      ...job,
+      source: 'bdjobs' as const,
+    }))
+    return { ...data, jobs }
   }
   const locations = [...new Set((criteria.location || '').split(',').map((value) => value.trim()).filter(Boolean))]
-  const results = []
-  for (const location of locations.length ? locations : ['']) {
+  const locList = locations.length ? locations : ['']
+  const results: SearchResult[] = []
+  let lastError: unknown = null
+
+  for (let i = 0; i < locList.length; i++) {
+    const location = locList[i]
     const remote = criteria.remote || location.toLowerCase() === 'remote'
-    results.push(await searchLocation({ ...criteria, remote, location: location.toLowerCase() === 'remote' ? '' : location }, token, page))
+
+    if (i > 0) {
+      // Throttle multiple location requests to avoid triggering LinkedIn 429 rate limit
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    }
+
+    try {
+      const res = await searchLocation(
+        { ...criteria, remote, location: location.toLowerCase() === 'remote' ? '' : location },
+        token,
+        page
+      )
+      results.push(res)
+    } catch (err) {
+      lastError = err
+    }
   }
-  const jobs = [...new Map(results.flatMap((result) => result.jobs).map((job) => [job.id, job])).values()]
+
+  // If all locations failed, bubble up the error
+  if (results.length === 0 && lastError) {
+    throw lastError
+  }
+
+  const jobs = [
+    ...new Map(
+      results
+        .flatMap((result) => result.jobs)
+        .map((job) => [job.id, { ...job, source: (job.source || 'linkedin') as 'linkedin' | 'bdjobs' }])
+    ).values(),
+  ]
   return { jobs, total: jobs.length, hasMore: results.some((result) => result.hasMore) }
 }
 

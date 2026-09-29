@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, CheckCircle, Star, Infinity as InfinityIcon, BookmarkCheck, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { isSupabaseConfigured } from '../lib/supabase'
 
@@ -35,7 +35,7 @@ export default function Auth() {
         setSuccess('Account created! Check your email to confirm, then sign in.')
         setMode('login')
       } else if (user) {
-        navigate('/setup')
+        navigate('/')
       }
     } finally {
       setLoading(false)
@@ -59,10 +59,10 @@ export default function Auth() {
     <div className="max-w-sm mx-auto py-12">
       {/* Logo */}
       <div className="text-center mb-8">
-        <img src="/logo.png" alt="LinkedIn Job Finder" width={80} height={80} className="w-20 h-20 object-contain mx-auto mb-4 rounded-xl" />
-        <h1 className="text-2xl font-bold text-gray-900">LinkedIn Job Finder</h1>
+        <img src="/logo.png" alt="Job Finder" width={80} height={80} className="w-20 h-20 object-contain mx-auto mb-4 rounded-xl" />
+        <h1 className="text-2xl font-bold text-gray-900">Job Finder</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Sign in to save favourites &amp; keep results permanently
+          Search jobs from LinkedIn &amp; Bdjobs, save favourites, and track applications
         </p>
       </div>
 
@@ -156,7 +156,7 @@ export default function Auth() {
 
         <div className="mt-4 pt-4 border-t border-gray-100 text-center">
           <button
-            onClick={() => navigate('/setup')}
+            onClick={() => navigate('/')}
             className="text-sm text-gray-500 hover:text-[#0077B5] transition-colors"
           >
             Continue without account →
@@ -170,14 +170,14 @@ export default function Auth() {
       {/* Benefits */}
       <div className="mt-5 grid grid-cols-2 gap-3 text-xs text-gray-600">
         {[
-          ['⭐', 'Favourites synced across devices'],
-          ['♾️', 'Search results never expire'],
-          ['📋', 'Save search criteria presets'],
-          ['🔒', 'Secure with Row Level Security'],
-        ].map(([icon, text]) => (
-          <div key={text} className="flex items-start gap-2 bg-white rounded-lg border border-gray-100 p-3">
-            <span>{icon}</span>
-            <span>{text}</span>
+          [Star, 'Favourites synced across devices'],
+          [InfinityIcon, 'Search results never expire'],
+          [BookmarkCheck, 'Save search criteria presets'],
+          [ShieldCheck, 'Secure with Row Level Security'],
+        ].map(([Icon, text]) => (
+          <div key={text as string} className="flex items-start gap-2 bg-white rounded-lg border border-gray-100 p-3">
+            <Icon size={14} className="text-[#0A66C2] shrink-0 mt-0.5" />
+            <span>{text as string}</span>
           </div>
         ))}
       </div>

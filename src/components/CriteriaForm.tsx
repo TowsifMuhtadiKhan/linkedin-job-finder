@@ -1,7 +1,9 @@
 import type { FormEvent } from 'react'
-import { SlidersHorizontal, RotateCcw } from 'lucide-react'
+import { RotateCcw, Globe, Search } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import KeywordsInput from './KeywordsInput'
+import { LinkedInLogo, BdjobsLogo } from './PlatformLogos'
+import CustomSelect from './CustomSelect'
 
 const JOB_TYPES = [
   { value: '', label: 'Any type' },
@@ -13,7 +15,7 @@ const JOB_TYPES = [
 ]
 
 const EXPERIENCE_LEVELS = [
-  { value: '', label: 'Any level' },
+  { value: '', label: 'Any experience' },
   { value: 'internship', label: 'Internship' },
   { value: 'entry', label: 'Entry level' },
   { value: 'associate', label: 'Associate' },
@@ -29,7 +31,13 @@ const DATE_OPTIONS = [
   { value: 'month', label: 'Past month' },
 ]
 
-export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => void; isLoading: boolean }) {
+export default function CriteriaForm({
+  onSearch,
+  isLoading,
+}: {
+  onSearch: () => void
+  isLoading: boolean
+}) {
   const { criteria, updateCriteria, resetCriteria } = useAppStore()
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -41,112 +49,171 @@ export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => 
     ? criteria.keywords.length > 0
     : !!criteria.keywords
 
+  const isLinkedIn = (criteria.source || 'linkedin') === 'linkedin'
+
   return (
-    <div className="card p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal size={17} className="text-[#0077B5]" />
-          <h2 className="font-semibold text-gray-900 text-sm sm:text-base">Search Criteria</h2>
-        </div>
-        <button type="button" onClick={resetCriteria}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
-          <RotateCcw size={11} /> Reset
-        </button>
-      </div>
+    <div className="card p-3 sm:p-4 w-full shadow-sm border border-gray-200 bg-white">
+      <form onSubmit={handleSubmit} className="space-y-2.5">
+        {/* Line 1: Primary Search Bar (Platform Toggle, Keywords, Location, Search Button) */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+          {/* Source Toggle */}
+          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-0.5 shrink-0 h-[42px] items-center">
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => updateCriteria('source', 'linkedin')}
+              className={`h-full px-3.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                isLinkedIn
+                  ? 'bg-white text-[#0A66C2] shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <LinkedInLogo className="w-3.5 h-3.5" />
+              <span>LinkedIn</span>
+            </button>
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() =>
+                useAppStore.getState().setCriteria({
+                  ...criteria,
+                  source: 'bdjobs',
+                  location: '',
+                  remote: false,
+                  jobType: '',
+                  experience: '',
+                  datePosted: '',
+                })
+              }
+              className={`h-full px-3.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                criteria.source === 'bdjobs'
+                  ? 'bg-white text-rose-700 shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <BdjobsLogo className="w-3.5 h-3.5" />
+              <span>Bdjobs</span>
+            </button>
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="job-source" className="label text-xs sm:text-sm">Job source</label>
-          <select id="job-source" className="input-field bg-white text-sm" value={criteria.source || 'linkedin'} disabled={isLoading}
-            onChange={e => useAppStore.getState().setCriteria({ ...criteria, source: e.target.value as 'linkedin' | 'bdjobs', location: '', remote: false, jobType: '', experience: '', datePosted: '' })}>
-            <option value="linkedin">LinkedIn</option><option value="bdjobs">Bdjobs</option>
-          </select>
-          {criteria.source === 'bdjobs' && <p className="text-xs text-gray-500 mt-2">Search Bdjobs by keyword. Multiple keywords are combined without duplicate jobs. Location and advanced filters are currently available for LinkedIn only.</p>}
-        </div>
-        {/* Keywords */}
-        <div>
-          <label className="label text-xs sm:text-sm">
-            Keywords
-            <span className="text-gray-400 font-normal ml-1 hidden sm:inline">(Enter or comma to add)</span>
-          </label>
-          <KeywordsInput
-            keywords={Array.isArray(criteria.keywords) ? criteria.keywords : []}
-            onChange={(kws) => updateCriteria('keywords', kws)}
-          />
-          <p className="text-xs text-gray-400 mt-1 sm:hidden">Press Enter or comma to add each keyword</p>
-        </div>
+          {/* Keywords Tag Input */}
+          <div className="flex-1 min-w-[200px]">
+            <KeywordsInput
+              label="Keywords"
+              placeholder="Job title or keywords (e.g. React, Python...)"
+              keywords={Array.isArray(criteria.keywords) ? criteria.keywords : []}
+              onChange={(kws) => updateCriteria('keywords', kws)}
+              category="keyword"
+            />
+          </div>
 
-        {criteria.source !== 'bdjobs' && <>
-        {/* Location */}
-        <div>
-          <label className="label text-xs sm:text-sm">
-            Location
-            <span className="text-gray-400 font-normal ml-1 hidden sm:inline">(Enter or comma to add)</span>
-          </label>
-          <KeywordsInput
-            label="Location"
-            placeholder="Type location + Enter (e.g. Bangladesh, London...)"
-            keywords={(criteria.location || '').split(',').map((value) => value.trim()).filter(Boolean)}
-            onChange={(locations) => updateCriteria('location', locations.join(', '))}
-            disabled={criteria.remote}
-          />
-          <p className="text-xs text-gray-400 mt-1 sm:hidden">Press Enter or comma to add each location</p>
-        </div>
+          {/* Location Input (LinkedIn only) */}
+          {isLinkedIn && (
+            <div className="w-full md:w-56 lg:w-64 shrink-0">
+              <KeywordsInput
+                label="Location"
+                placeholder="Location (e.g. Bangladesh...)"
+                keywords={(criteria.location || '')
+                  .split(',')
+                  .map((value) => value.trim())
+                  .filter(Boolean)}
+                onChange={(locations) => updateCriteria('location', locations.join(', '))}
+                disabled={criteria.remote}
+                category="location"
+              />
+            </div>
+          )}
 
-        {/* Remote toggle */}
-        <div className="flex items-center gap-3">
+          {/* Search Button (Using Search icon instead of emoji, with vibrant logo blue) */}
           <button
-            type="button"
-            role="switch"
-            aria-checked={criteria.remote}
-            onClick={() => updateCriteria('remote', !criteria.remote)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              criteria.remote ? 'bg-[#0077B5]' : 'bg-gray-300'}`}
+            type="submit"
+            disabled={isLoading || !hasKeywords}
+            className="btn-primary h-[42px] px-6 shrink-0 flex items-center justify-center gap-2 text-sm font-semibold transition-all cursor-pointer"
           >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-              criteria.remote ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            {isLoading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                <span>Searching…</span>
+              </>
+            ) : (
+              <>
+                <Search size={16} className="text-white" />
+                <span>Search Jobs</span>
+              </>
+            )}
           </button>
-          <span className="text-sm text-gray-700 font-medium">Remote only</span>
         </div>
 
-        {/* Job Type + Experience — stacked on mobile, side by side on sm+ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="label text-xs sm:text-sm">Job Type</label>
-            <select className="input-field bg-white text-sm"
-              value={criteria.jobType} onChange={(e) => updateCriteria('jobType', e.target.value)}>
-              {JOB_TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+        {/* Line 2: Secondary Filters & Reset (max 2 lines total) */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs text-gray-600 pt-0.5">
+          {isLinkedIn ? (
+            <>
+              {/* Remote Toggle */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={criteria.remote}
+                onClick={() => updateCriteria('remote', !criteria.remote)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                  criteria.remote
+                    ? 'bg-blue-50 border-blue-200 text-[#0A66C2]'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Globe size={13} className={criteria.remote ? 'text-[#0A66C2]' : 'text-gray-400'} />
+                <span>Remote only</span>
+              </button>
+
+              <span className="text-gray-300 hidden sm:inline">|</span>
+
+              {/* Job Type Dropdown */}
+              <CustomSelect
+                value={criteria.jobType || ''}
+                onChange={(val) => updateCriteria('jobType', val)}
+                options={JOB_TYPES}
+                placeholder="Job Type"
+                menuWidth="w-40"
+                ariaLabel="Job Type filter"
+              />
+
+              {/* Experience Dropdown */}
+              <CustomSelect
+                value={criteria.experience || ''}
+                onChange={(val) => updateCriteria('experience', val)}
+                options={EXPERIENCE_LEVELS}
+                placeholder="Experience"
+                menuWidth="w-44"
+                ariaLabel="Experience level filter"
+              />
+
+              {/* Date Posted Dropdown */}
+              <CustomSelect
+                value={criteria.datePosted || ''}
+                onChange={(val) => updateCriteria('datePosted', val)}
+                options={DATE_OPTIONS}
+                placeholder="Date Posted"
+                menuWidth="w-40"
+                ariaLabel="Date posted filter"
+              />
+            </>
+          ) : (
+            <span className="text-xs text-gray-500">
+              Searching Bdjobs across Bangladesh. Multiple keywords can be entered.
+            </span>
+          )}
+
+          {/* Reset Filters on the far right */}
+          <div className="ml-auto flex items-center">
+            <button
+              type="button"
+              onClick={resetCriteria}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors py-1 cursor-pointer"
+              title="Reset all search criteria"
+            >
+              <RotateCcw size={11} /> Reset
+            </button>
           </div>
-          <div>
-            <label className="label text-xs sm:text-sm">Experience</label>
-            <select className="input-field bg-white text-sm"
-              value={criteria.experience} onChange={(e) => updateCriteria('experience', e.target.value)}>
-              {EXPERIENCE_LEVELS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
         </div>
-
-        {/* Date Posted */}
-        <div>
-          <label className="label text-xs sm:text-sm">Date Posted</label>
-          <select className="input-field bg-white text-sm"
-            value={criteria.datePosted} onChange={(e) => updateCriteria('datePosted', e.target.value)}>
-            {DATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </div>
-
-        </>}
-        <button type="submit" disabled={isLoading || !hasKeywords}
-          className="btn-primary w-full flex items-center justify-center gap-2 text-sm sm:text-base">
-          {isLoading ? (
-            <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" /> Searching…</>
-          ) : '🔍 Search Jobs'}
-        </button>
-
-        {!hasKeywords && (
-          <p className="text-xs text-center text-gray-400">Add at least one keyword to search</p>
-        )}
       </form>
     </div>
   )

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-/* ── LinkedIn brand colors (Tailwind v4 theme tokens) ── */
+/* ── Eye-friendly, soothing LinkedIn blue (#0A66C2) ── */
 @theme {
-  --color-linkedin-blue: #0077B5;
+  --color-linkedin-blue: #0A66C2;
   --color-linkedin-dark: #004182;
-  --color-linkedin-light: #E8F4FD;
+  --color-linkedin-light: #F0F7FF;
 }
 
 @layer base {
@@ -16,19 +16,19 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-[#0077B5] text-white font-semibold px-5 py-2.5 rounded-full hover:bg-[#004182] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-[#0A66C2] text-white font-medium px-5 py-2.5 rounded-full hover:bg-[#004182] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs;
   }
 
   .btn-secondary {
-    @apply border border-[#0077B5] text-[#0077B5] font-semibold px-5 py-2.5 rounded-full hover:bg-[#E8F4FD] transition-colors duration-200;
+    @apply border border-gray-300 text-gray-700 font-medium px-5 py-2.5 rounded-full hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200;
   }
 
   .card {
-    @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-white rounded-xl border border-gray-200/80 shadow-2xs hover:shadow-xs transition-shadow duration-200;
   }
 
   .input-field {
-    @apply w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0077B5] focus:border-transparent transition-all;
+    @apply w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A66C2]/30 focus:border-[#0A66C2] transition-all;
   }
 
   .label {

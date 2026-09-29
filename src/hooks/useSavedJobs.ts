@@ -1,4 +1,4 @@
-import type { Job } from '../types'
+import type { Job, Database } from '../types'
 import { useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
@@ -36,6 +36,8 @@ export function useSavedJobs() {
             savedAt: row.saved_at,
             appliedAt: row.applied_at,
             deadline: row.deadline,
+            source: ((row as { source?: string | null }).source as 'linkedin' | 'bdjobs') ||
+              (row.url?.includes('bdjobs.com') || row.job_id?.startsWith('bdjobs:') ? 'bdjobs' : 'linkedin'),
           }))
           setSavedJobs(mapped)
         }
@@ -45,8 +47,10 @@ export function useSavedJobs() {
   const saveJob = useCallback(
     async (job: Job) => {
       if (authLoading) throw new Error('Please wait for your account to finish loading.')
+      const jobSource = job.source || (job.url?.includes('bdjobs.com') || job.id?.startsWith('bdjobs:') ? 'bdjobs' : 'linkedin')
+
       if (user && supabase) {
-        const { error } = await supabase.from('saved_jobs').upsert({
+        const payload: Database['public']['Tables']['saved_jobs']['Insert'] = {
           user_id: user.id,
           job_id: job.id,
           title: job.title,
@@ -55,12 +59,20 @@ export function useSavedJobs() {
           url: job.url,
           logo: job.logo || null,
           posted_date: job.postedDate || null,
+          source: jobSource,
           ...(job.appliedAt ? { applied_at: job.appliedAt } : {}),
           ...(job.deadline ? { deadline: job.deadline } : {}),
-        }, { onConflict: 'user_id,job_id', ignoreDuplicates: true })
+        }
+        let { error } = await supabase.from('saved_jobs').upsert(payload, { onConflict: 'user_id,job_id', ignoreDuplicates: true })
+        if (error && error.message?.includes('source')) {
+          const fallbackPayload = { ...payload }
+          delete fallbackPayload.source
+          const fallback = await supabase.from('saved_jobs').upsert(fallbackPayload, { onConflict: 'user_id,job_id', ignoreDuplicates: true })
+          error = fallback.error
+        }
         if (error) throw new Error('Could not save this job. Please try again.')
       }
-      saveLocal(job)
+      saveLocal({ ...job, source: jobSource })
     },
     [user, authLoading, saveLocal]
   )

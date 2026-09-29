@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { getCV } from '../lib/cvStorage'
@@ -12,7 +13,7 @@ export default function CVReview() {
   const [params] = useSearchParams()
   // Reset private document state when the signed-in account changes.
   if (loading) return <p role="status">Loading your account…</p>
-  if (!user) return <div className="card p-6">Sign in to compare your CV with a job. <Link to="/auth" className="text-[#0077B5]">Sign in</Link></div>
+  if (!user) return <div className="card p-6">Sign in to compare your CV with a job. <Link to="/auth" className="text-[#0A66C2]">Sign in</Link></div>
   return <ReviewForm key={`${user.id}-${params.get('job') || ''}`} initialUrl={params.get('job') || ''} />
 }
 
@@ -118,7 +119,7 @@ function ReviewForm({ initialUrl }: { initialUrl: string }) {
         <p className="text-xs text-gray-500">Keyword coverage uses unique English terms after removing common words. It does not understand synonyms, negation, or required versus optional skills. Repeating keywords does not improve the score. Text checks cannot certify columns, tables, fonts, or ATS compatibility.</p>
         <div><h3 className="font-semibold mb-2">Terms found</h3><p className="text-sm text-green-700 break-words">{result.matched.join(', ') || 'No matching terms found.'}</p></div>
         <div><h3 className="font-semibold mb-2">Terms to review</h3><p className="text-sm text-amber-800 break-words">{result.missing.join(', ') || 'All selected terms appear in your CV.'}</p></div>
-        <div><h3 className="font-semibold mb-2">Structure checks</h3><ul className="space-y-2 text-sm">{result.checks.map(c => <li key={c.label}>{c.pass ? '✓' : '○'} {c.label}: {c.pass ? 'Detected' : 'Not detected'}</li>)}</ul></div>
+        <div><h3 className="font-semibold mb-2">Structure checks</h3><ul className="space-y-2 text-sm">{result.checks.map(c => <li key={c.label} className="flex items-center gap-2">{c.pass ? <CheckCircle2 size={15} className="text-green-600 shrink-0" /> : <XCircle size={15} className="text-gray-400 shrink-0" />} <span>{c.label}: {c.pass ? 'Detected' : 'Not detected'}</span></li>)}</ul></div>
         <div><h3 className="font-semibold mb-2">What to change</h3><ol className="list-decimal pl-5 space-y-3 text-sm text-gray-700">{result.suggestions.map(t => <li key={t}>{t}</li>)}</ol></div>
       </div>}
     </section>

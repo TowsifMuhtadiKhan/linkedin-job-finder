@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useSavedJobs } from '../hooks/useSavedJobs'
 import ReviewCVLink from './ReviewCVLink'
+import { LinkedInLogo, BdjobsLogo } from './PlatformLogos'
 
 function formatDate(dateStr: string) {
   if (!dateStr) return ''
@@ -48,7 +49,7 @@ function SaveJobButton({ job, size = 16 }: { job: Job; size?: number }) {
         aria-label={saved ? 'Remove favourite' : 'Save as favourite'}
         title={pending ? 'Saving?' : saved ? 'Remove favourite' : 'Save as favourite'}
         className={`p-1.5 rounded-full transition-colors disabled:opacity-50 ${
-          saved ? 'text-[#0077B5] bg-[#E8F4FD]' : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
+          saved ? 'text-[#0A66C2] bg-[#F0F7FF]' : 'text-gray-400 hover:text-[#0A66C2] hover:bg-gray-100'
         }`}
       >
         {saved ? <BookmarkCheck size={size} /> : <Bookmark size={size} />}
@@ -84,11 +85,23 @@ function JobRow({ job }: { job: Job }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 text-sm truncate">{job.title}</p>
-        <span className="text-[10px] text-gray-500">{job.id.startsWith('bdjobs:') ? 'Bdjobs' : 'LinkedIn'}</span>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-gray-900 text-sm truncate">{job.title}</p>
+          {job.source === 'bdjobs' || job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com') ? (
+            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+              <BdjobsLogo className="w-3 h-3" />
+              <span>Bdjobs</span>
+            </span>
+          ) : (
+            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#0A66C2] border border-blue-200">
+              <LinkedInLogo className="w-3 h-3" />
+              <span>LinkedIn</span>
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-gray-500">
           {job.company && (
-            <span className="text-[#0077B5] font-medium">{job.company}</span>
+            <span className="text-gray-700 font-medium">{job.company}</span>
           )}
           {job.location && (
             <span className="flex items-center gap-0.5">
@@ -109,7 +122,7 @@ function JobRow({ job }: { job: Job }) {
         <SaveJobButton job={job} />
         <button
           onClick={handleCopy}
-          className="p-1.5 rounded border border-gray-200 text-gray-400 hover:text-[#0077B5] transition-colors"
+          className="p-1.5 rounded border border-gray-200 text-gray-400 hover:text-[#0A66C2] transition-colors"
         >
           {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
         </button>
@@ -117,7 +130,7 @@ function JobRow({ job }: { job: Job }) {
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 bg-[#0077B5] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#004182] transition-colors"
+          className="flex items-center gap-1.5 bg-[#0A66C2] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#004182] transition-colors"
         >
           <Send size={11} /> Apply
         </a>
@@ -125,7 +138,7 @@ function JobRow({ job }: { job: Job }) {
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden sm:flex items-center gap-1.5 border border-[#0077B5] text-[#0077B5] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#E8F4FD] transition-colors"
+          className="hidden sm:flex items-center gap-1.5 border border-[#0A66C2] text-[#0A66C2] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#F0F7FF] transition-colors"
         >
           <ExternalLink size={11} /> View
         </a>
@@ -137,6 +150,7 @@ function JobRow({ job }: { job: Job }) {
 // ── Card view ─────────────────────────────────────────────────────────────────
 function JobCardView({ job }: { job: Job }) {
   const [copied, setCopied] = useState(false)
+  const isBdjobs = job.source === 'bdjobs' || job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com')
   const handleCopy = async () => {
     await navigator.clipboard.writeText(job.url).catch(() => {})
     setCopied(true)
@@ -164,10 +178,21 @@ function JobCardView({ job }: { job: Job }) {
             <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
               {job.title}
             </h3>
-            <span className="text-[10px] text-gray-500">{job.id.startsWith('bdjobs:') ? 'Bdjobs' : 'LinkedIn'}</span>
-            {job.company && (
-              <p className="text-[#0077B5] text-sm font-medium mt-0.5 truncate">{job.company}</p>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  isBdjobs
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                    : 'bg-blue-50 text-[#0A66C2] border border-blue-200'
+                }`}
+              >
+                {isBdjobs ? <BdjobsLogo className="w-3 h-3" /> : <LinkedInLogo className="w-3 h-3" />}
+                <span>{isBdjobs ? 'Bdjobs' : 'LinkedIn'}</span>
+              </span>
+              {job.company && (
+                <p className="text-gray-700 text-sm font-medium truncate">{job.company}</p>
+              )}
+            </div>
           </div>
         </div>
         <SaveJobButton job={job} size={18} />
@@ -194,7 +219,7 @@ function JobCardView({ job }: { job: Job }) {
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 bg-[#0077B5] text-white text-sm font-semibold py-2 rounded-full hover:bg-[#004182] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-[#0A66C2] text-white text-sm font-semibold py-2 rounded-full hover:bg-[#004182] transition-colors"
         >
           <Send size={14} /> Apply Now
         </a>
@@ -202,14 +227,14 @@ function JobCardView({ job }: { job: Job }) {
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0077B5] hover:border-[#0077B5] transition-colors"
+          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0A66C2] hover:border-[#0A66C2] transition-colors"
           title={job.id.startsWith('bdjobs:') ? 'View on Bdjobs' : 'View on LinkedIn'}
         >
           <ExternalLink size={15} />
         </a>
         <button
           onClick={handleCopy}
-          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0077B5] transition-colors"
+          className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0A66C2] transition-colors"
           title="Copy link"
         >
           {copied ? <Check size={15} className="text-green-600" /> : <Copy size={15} />}

@@ -21,7 +21,7 @@ export function createHandler(request: typeof fetch = fetch) {
           if (!/^\d+$/.test(String(row.Jobid)) || !row.jobTitle) continue
           const id = `bdjobs:${row.Jobid}`
           jobs.set(id, { id, title: row.jobTitle, company: row.companyName || '', location: row.location || '', postedDate: row.publishDate || null,
-            logo: row.logoUrl?.startsWith('https://') ? row.logoUrl : null, url: `https://bdjobs.com/h/details/${row.Jobid}` })
+            logo: row.logoUrl?.startsWith('https://') ? row.logoUrl : null, url: `https://bdjobs.com/h/details/${row.Jobid}`, source: 'bdjobs' })
         }
       }
       return reply({ jobs: [...jobs.values()], total: jobs.size, hasMore })

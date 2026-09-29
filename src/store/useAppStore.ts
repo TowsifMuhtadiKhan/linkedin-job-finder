@@ -72,7 +72,8 @@ const useAppStore = create<AppState>()(
       saveJob: (job) => {
         const current = get().savedJobs
         if (!current.find((j) => j.id === job.id)) {
-          set({ savedJobs: [...current, { ...job, savedAt: new Date().toISOString() }] })
+          const source = job.source || (job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com') ? 'bdjobs' : 'linkedin')
+          set({ savedJobs: [...current, { ...job, source, savedAt: new Date().toISOString() }] })
         }
       },
       unsaveJob: (jobId) =>

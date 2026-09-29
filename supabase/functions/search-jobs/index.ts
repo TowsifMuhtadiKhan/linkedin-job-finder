@@ -61,11 +61,16 @@ function parseLinkedInHTML(html: string): Job[] {
   for (const block of liBlocks) {
     try {
       const urlMatch = block.match(
-        /href="(https:\/\/www\.linkedin\.com\/jobs\/view\/[^"?]+)/
+        /href="((?:https:\/\/[a-z0-9-]+\.linkedin\.com)?\/jobs\/view\/[^"?]+)/
       )
       if (!urlMatch) continue
 
-      const url = urlMatch[1]
+      let url = urlMatch[1]
+      if (url.startsWith('/')) {
+        url = `https://www.linkedin.com${url}`
+      } else {
+        url = url.replace(/^https:\/\/[a-z0-9-]+\.linkedin\.com/, 'https://www.linkedin.com')
+      }
       const idMatch = url.match(/\/jobs\/view\/[^/]+-(\d+)$/)
       const id = idMatch ? idMatch[1] : crypto.randomUUID()
 
@@ -91,7 +96,7 @@ function parseLinkedInHTML(html: string): Job[] {
       const logoMatch = block.match(/data-delayed-url="([^"]+)"/)
       const logo = logoMatch ? logoMatch[1] : null
 
-      jobs.push({ id, title, company, location, postedDate, url, logo })
+      jobs.push({ id, title, company, location, postedDate, url, logo, source: 'linkedin' })
     } catch {
       // skip malformed blocks
     }
