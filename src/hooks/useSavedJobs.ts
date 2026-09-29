@@ -44,9 +44,9 @@ export function useSavedJobs() {
 
   const saveJob = useCallback(
     async (job: Job) => {
-      saveLocal(job)
+      if (authLoading) throw new Error('Please wait for your account to finish loading.')
       if (user && supabase) {
-        await supabase.from('saved_jobs').upsert({
+        const { error } = await supabase.from('saved_jobs').upsert({
           user_id: user.id,
           job_id: job.id,
           title: job.title,
@@ -55,26 +55,30 @@ export function useSavedJobs() {
           url: job.url,
           logo: job.logo || null,
           posted_date: job.postedDate || null,
-          applied_at: job.appliedAt || null,
-          deadline: job.deadline || null,
+          ...(job.appliedAt ? { applied_at: job.appliedAt } : {}),
+          ...(job.deadline ? { deadline: job.deadline } : {}),
         }, { onConflict: 'user_id,job_id', ignoreDuplicates: true })
+        if (error) throw new Error('Could not save this job. Please try again.')
       }
+      saveLocal(job)
     },
-    [user, saveLocal]
+    [user, authLoading, saveLocal]
   )
 
   const unsaveJob = useCallback(
     async (jobId: string) => {
-      unsaveLocal(jobId)
+      if (authLoading) throw new Error('Please wait for your account to finish loading.')
       if (user && supabase) {
-        await supabase
+        const { error } = await supabase
           .from('saved_jobs')
           .delete()
           .eq('user_id', user.id)
           .eq('job_id', jobId)
+        if (error) throw new Error('Could not remove this job. Please try again.')
       }
+      unsaveLocal(jobId)
     },
-    [user, unsaveLocal]
+    [user, authLoading, unsaveLocal]
   )
 
   const updateSavedJob = useCallback(async (jobId: string, changes: Pick<Job, 'appliedAt' | 'deadline'>) => {

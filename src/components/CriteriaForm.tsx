@@ -55,6 +55,14 @@ export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => 
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="job-source" className="label text-xs sm:text-sm">Job source</label>
+          <select id="job-source" className="input-field bg-white text-sm" value={criteria.source || 'linkedin'} disabled={isLoading}
+            onChange={e => useAppStore.getState().setCriteria({ ...criteria, source: e.target.value as 'linkedin' | 'bdjobs', location: '', remote: false, jobType: '', experience: '', datePosted: '' })}>
+            <option value="linkedin">LinkedIn</option><option value="bdjobs">Bdjobs</option>
+          </select>
+          {criteria.source === 'bdjobs' && <p className="text-xs text-gray-500 mt-2">Search Bdjobs by keyword. Multiple keywords are combined without duplicate jobs. Location and advanced filters are currently available for LinkedIn only.</p>}
+        </div>
         {/* Keywords */}
         <div>
           <label className="label text-xs sm:text-sm">
@@ -68,6 +76,7 @@ export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => 
           <p className="text-xs text-gray-400 mt-1 sm:hidden">Press Enter or comma to add each keyword</p>
         </div>
 
+        {criteria.source !== 'bdjobs' && <>
         {/* Location */}
         <div>
           <label className="label text-xs sm:text-sm">
@@ -127,6 +136,7 @@ export default function CriteriaForm({ onSearch, isLoading }: { onSearch: () => 
           </select>
         </div>
 
+        </>}
         <button type="submit" disabled={isLoading || !hasKeywords}
           className="btn-primary w-full flex items-center justify-center gap-2 text-sm sm:text-base">
           {isLoading ? (

@@ -5,6 +5,7 @@ import {
   Building2, Copy, Check, Send
 } from 'lucide-react'
 import { useSavedJobs } from '../hooks/useSavedJobs'
+import ReviewCVLink from './ReviewCVLink'
 
 function formatDate(dateStr: string) {
   if (!dateStr) return ''
@@ -21,11 +22,44 @@ function formatDate(dateStr: string) {
 }
 
 // ── List view row ─────────────────────────────────────────────────────────────
-function JobRow({ job }: { job: Job }) {
-  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
-  const [copied, setCopied] = useState(false)
+function SaveJobButton({ job, size = 16 }: { job: Job; size?: number }) {
+  const { saveJob, unsaveJob, isJobSaved, authLoading } = useSavedJobs()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState('')
   const saved = isJobSaved(job.id)
 
+  async function toggleSave() {
+    if (pending || authLoading) return
+    setPending(true)
+    setError('')
+    try {
+      await (saved ? unsaveJob(job.id) : saveJob(job))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update this job. Please try again.')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <button type="button" onClick={() => void toggleSave()} disabled={pending || authLoading}
+        aria-busy={pending} aria-pressed={saved}
+        aria-label={saved ? 'Remove favourite' : 'Save as favourite'}
+        title={pending ? 'Saving?' : saved ? 'Remove favourite' : 'Save as favourite'}
+        className={`p-1.5 rounded-full transition-colors disabled:opacity-50 ${
+          saved ? 'text-[#0077B5] bg-[#E8F4FD]' : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
+        }`}
+      >
+        {saved ? <BookmarkCheck size={size} /> : <Bookmark size={size} />}
+      </button>
+      {error && <p role="alert" className="absolute right-0 top-full z-10 w-56 rounded border border-red-200 bg-white p-2 text-xs text-red-600 shadow">{error}</p>}
+    </div>
+  )
+}
+
+function JobRow({ job }: { job: Job }) {
+  const [copied, setCopied] = useState(false)
   const handleCopy = async () => {
     await navigator.clipboard.writeText(job.url).catch(() => {})
     setCopied(true)
@@ -51,6 +85,7 @@ function JobRow({ job }: { job: Job }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-900 text-sm truncate">{job.title}</p>
+        <span className="text-[10px] text-gray-500">{job.id.startsWith('bdjobs:') ? 'Bdjobs' : 'LinkedIn'}</span>
         <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-gray-500">
           {job.company && (
             <span className="text-[#0077B5] font-medium">{job.company}</span>
@@ -70,15 +105,8 @@ function JobRow({ job }: { job: Job }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={() => (saved ? unsaveJob(job.id) : saveJob(job))}
-          title={saved ? 'Remove favourite' : 'Save as favourite'}
-          className={`p-1.5 rounded-full transition-colors ${
-            saved ? 'text-[#0077B5] bg-[#E8F4FD]' : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
-          }`}
-        >
-          {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-        </button>
+        <ReviewCVLink job={job} />
+        <SaveJobButton job={job} />
         <button
           onClick={handleCopy}
           className="p-1.5 rounded border border-gray-200 text-gray-400 hover:text-[#0077B5] transition-colors"
@@ -108,10 +136,7 @@ function JobRow({ job }: { job: Job }) {
 
 // ── Card view ─────────────────────────────────────────────────────────────────
 function JobCardView({ job }: { job: Job }) {
-  const { saveJob, unsaveJob, isJobSaved } = useSavedJobs()
   const [copied, setCopied] = useState(false)
-  const saved = isJobSaved(job.id)
-
   const handleCopy = async () => {
     await navigator.clipboard.writeText(job.url).catch(() => {})
     setCopied(true)
@@ -139,22 +164,13 @@ function JobCardView({ job }: { job: Job }) {
             <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
               {job.title}
             </h3>
+            <span className="text-[10px] text-gray-500">{job.id.startsWith('bdjobs:') ? 'Bdjobs' : 'LinkedIn'}</span>
             {job.company && (
               <p className="text-[#0077B5] text-sm font-medium mt-0.5 truncate">{job.company}</p>
             )}
           </div>
         </div>
-        <button
-          onClick={() => (saved ? unsaveJob(job.id) : saveJob(job))}
-          title={saved ? 'Remove favourite' : 'Save as favourite'}
-          className={`shrink-0 p-1.5 rounded-full transition-colors ${
-            saved
-              ? 'text-[#0077B5] bg-[#E8F4FD]'
-              : 'text-gray-400 hover:text-[#0077B5] hover:bg-gray-100'
-          }`}
-        >
-          {saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-        </button>
+        <SaveJobButton job={job} size={18} />
       </div>
 
       {/* Meta */}
@@ -173,6 +189,7 @@ function JobCardView({ job }: { job: Job }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+        <ReviewCVLink job={job} />
         <a
           href={job.url}
           target="_blank"
@@ -186,7 +203,7 @@ function JobCardView({ job }: { job: Job }) {
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0077B5] hover:border-[#0077B5] transition-colors"
-          title="View on LinkedIn"
+          title={job.id.startsWith('bdjobs:') ? 'View on Bdjobs' : 'View on LinkedIn'}
         >
           <ExternalLink size={15} />
         </a>

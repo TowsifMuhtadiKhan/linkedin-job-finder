@@ -4,6 +4,8 @@ import Setup from './pages/Setup'
 import Results from './pages/Results'
 import Saved from './pages/Saved'
 import Auth from './pages/Auth'
+import UploadCV from './pages/UploadCV'
+import CVReview from './pages/CVReview'
 
 function App() {
   return (
@@ -16,6 +18,9 @@ function App() {
           <Route path="/setup" element={<Setup />} />
           <Route path="/results" element={<Results />} />
           <Route path="/saved" element={<Saved />} />
+          <Route path="/profile" element={<UploadCV />} />
+          <Route path="/upload-cv" element={<Navigate to="/profile" replace />} />
+          <Route path="/cv-review" element={<CVReview />} />
         </Routes>
       </main>
     </div>

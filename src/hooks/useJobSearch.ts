@@ -4,6 +4,17 @@ import { searchLocalLinkedIn } from '../lib/linkedinSearch'
 
 // Use the existing server-side LinkedIn guest search proxy.
 export async function searchJobs(criteria: SearchCriteria, token: string, page = 1): Promise<SearchResult> {
+  if (criteria.source === 'bdjobs') {
+    if (!supabase) throw new Error('Configure Supabase to search Bdjobs.')
+    const keywords = (Array.isArray(criteria.keywords) ? criteria.keywords : [criteria.keywords]).map(k => k.trim()).filter(Boolean)
+    const { data, error } = await supabase.functions.invoke('search-bdjobs', { body: { keywords, page } })
+    if (error) {
+      const detail = error.context instanceof Response ? await error.context.json().catch(() => null) : null
+      throw new Error(detail?.error || 'Bdjobs search failed. Please try again.')
+    }
+    if (!Array.isArray(data?.jobs)) throw new Error('Bdjobs returned an invalid result.')
+    return data
+  }
   const locations = [...new Set((criteria.location || '').split(',').map((value) => value.trim()).filter(Boolean))]
   const results = []
   for (const location of locations.length ? locations : ['']) {

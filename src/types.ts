@@ -1,4 +1,5 @@
 export interface SearchCriteria {
+  source?: 'linkedin' | 'bdjobs'
   keywords: string[] | string
   location: string
   jobType: string

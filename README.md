@@ -17,6 +17,7 @@ The app links you to original listings. It does not submit applications on your 
 ## Features
 
 - **Keyword chips:** Add multiple job titles or skills with Enter or comma.
+- **Job sources:** Choose LinkedIn or Bdjobs in Search Criteria. Bdjobs currently supports keyword search, pagination, bookmarks, and descriptions for CV comparisons. Its public website endpoints may change; failures are shown explicitly. Deploy `search-bdjobs` for local and hosted use. Advanced filters currently apply to LinkedIn only.
 - **Location chips:** Search several locations and combine results without duplicate job IDs.
 - **Search filters:** Filter by remote work, job type, experience, and posting date.
 - **Card and list views:** Choose how you browse job details.
@@ -25,6 +26,8 @@ The app links you to original listings. It does not submit applications on your 
 - **Email accounts:** Register and sign in through Supabase Auth.
 - **Guest access:** Search without an account; guest results expire after 10 minutes.
 - **Responsive interface:** Browse on desktop or mobile.
+- **CV uploads:** Signed-in users can submit their CV to the portal's shared Google Drive folder. Requires the [one-time owner setup](docs/cv-upload-setup.md).
+- **Free CV checker:** Choose **Check CV** on a job or open `/cv-review`. Fetch a LinkedIn description (or paste it), load an uploaded PDF/DOCX or local file, and review keyword coverage, text structure checks, and improvement suggestions. Analysis runs in the browser; no AI API key is needed. Scores are English-language heuristics, not employer ATS scores or hiring predictions. Scanned PDFs and legacy DOC files require pasted text. Deploy the `job-description` Edge Function to enable fetching; it validates Supabase Auth tokens in its handler.
 
 **No JSearch or RapidAPI subscription is required.** A LinkedIn access token is optional and is used for profile lookup, not job search.
 

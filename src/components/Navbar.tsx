@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { Briefcase, BookmarkCheck, Settings, LogIn, LogOut } from 'lucide-react'
+import { Briefcase, BookmarkCheck, Settings, LogIn, LogOut, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import useAppStore from '../store/useAppStore'
 import { useAuth } from '../hooks/useAuth'
@@ -16,6 +16,8 @@ export default function Navbar() {
   const navLink = (to: string, label: string, Icon: LucideIcon) => (
     <Link
       to={to}
+      aria-label={label}
+      title={label}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
         isActive(to)
           ? 'bg-[#E8F4FD] text-[#0077B5]'
@@ -42,6 +44,7 @@ export default function Navbar() {
         <div className="flex items-center gap-1">
           {navLink('/setup', 'Setup', Settings)}
           {navLink('/results', 'Jobs', Briefcase)}
+          {navLink('/profile', 'Profile', UserRound)}
 
           {/* Saved with badge */}
           <Link

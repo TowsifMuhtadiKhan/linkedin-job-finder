@@ -1,8 +1,9 @@
 ﻿import { useState } from 'react'
-import { ExternalLink, Trash2, Send, BookmarkCheck, Check, CalendarDays } from 'lucide-react'
+import { ExternalLink, Trash2, Send, BookmarkCheck, Check, CalendarDays, Building2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSavedJobs } from '../hooks/useSavedJobs'
 import type { Job } from '../types'
+import ReviewCVLink from '../components/ReviewCVLink'
 
 function formatDate(value: string) {
   const date = new Date(value.length === 10 ? `${value}T00:00:00` : value)
@@ -32,6 +33,7 @@ function SavedJobCard({ job, update, remove, disabled }: {
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [deadline, setDeadline] = useState(job.deadline || '')
+  const [failedLogo, setFailedLogo] = useState<string | null>(null)
   const info = job.deadline ? deadlineInfo(job.deadline) : null
 
   async function save(changes: Pick<Job, 'appliedAt' | 'deadline'>) {
@@ -47,10 +49,32 @@ function SavedJobCard({ job, update, remove, disabled }: {
     }
   }
 
+  async function handleRemove() {
+    setPending(true)
+    setError('')
+    try {
+      await remove(job.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove this job. Please try again.')
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
     <article className="card px-4 py-4">
       <div className="flex flex-col sm:flex-row items-start gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex flex-1 min-w-0 w-full items-start gap-4">
+          {job.logo && failedLogo !== job.logo ? (
+            <img src={job.logo} alt="" loading="lazy"
+              className="w-10 h-10 rounded border border-gray-100 object-contain shrink-0"
+              onError={() => setFailedLogo(job.logo ?? null)} />
+          ) : (
+            <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
+              <Building2 size={18} className="text-gray-400" aria-hidden="true" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold text-gray-900 text-sm">{job.title}</h3>
             <span className={`text-xs px-2 py-0.5 rounded-full ${job.appliedAt ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -88,7 +112,9 @@ function SavedJobCard({ job, update, remove, disabled }: {
             </form>
           )}
         </div>
+          </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <ReviewCVLink job={job} />
           <button type="button" disabled={pending || disabled} onClick={() => void save({ appliedAt: job.appliedAt ? null : new Date().toISOString() })}
             className="flex items-center gap-1.5 border border-[#0077B5] text-[#0077B5] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#E8F4FD] disabled:opacity-50">
             <Check size={12} /> {pending ? 'Saving…' : job.appliedAt ? 'Undo applied' : 'Mark applied'}
@@ -99,7 +125,7 @@ function SavedJobCard({ job, update, remove, disabled }: {
           </a>
           <a href={job.url} target="_blank" rel="noopener noreferrer" title="View on LinkedIn" aria-label={`View ${job.title} on LinkedIn`}
             className="p-1.5 rounded border border-gray-200 text-[#0077B5] hover:bg-[#E8F4FD]"><ExternalLink size={14} /></a>
-          <button type="button" disabled={pending || disabled} onClick={() => void remove(job.id)} title="Remove" aria-label={`Remove ${job.title}`}
+          <button type="button" disabled={pending || disabled} onClick={() => void handleRemove()} title="Remove" aria-label={`Remove ${job.title}`}
             className="p-1.5 rounded border border-gray-200 text-gray-400 hover:text-red-500 disabled:opacity-50"><Trash2 size={14} /></button>
         </div>
       </div>
