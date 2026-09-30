@@ -1,12 +1,29 @@
+import { isProviderPortal, searchKeywords } from '../lib/jobPortals'
 import type { SearchCriteria, SearchResult, LinkedInProfile, Job } from '../types'
 import { supabase } from '../lib/supabase'
 import { searchLocalLinkedIn } from '../lib/linkedinSearch'
 
 // Use the existing server-side LinkedIn guest search proxy.
-export async function searchJobs(criteria: SearchCriteria, token: string, page = 1): Promise<SearchResult> {
+export async function searchJobs(criteria: SearchCriteria, token: string, page = 1, nextPageToken?: string): Promise<SearchResult> {
+  if (isProviderPortal(criteria.source)) {
+    if (!supabase) throw new Error('Configure Supabase to search this portal.')
+    if (page > 1 && !nextPageToken) throw new Error('Please start a new search to load this portal?s results.')
+    const { data, error } = await supabase.functions.invoke<SearchResult & { error?: string }>('search-portals', {
+      body: { criteria, nextPageToken },
+    })
+    if (error) {
+      const detail = error.context instanceof Response ? await error.context.json().catch(() => null) : null
+      throw new Error(detail?.error || 'This portal?s search service is not available yet. The site owner must deploy and configure search-portals.')
+    }
+    if (data?.error) throw new Error(data.error)
+    if (!Array.isArray(data?.jobs)) throw new Error('The portal returned an invalid response.')
+    return data
+  }
   if (criteria.source === 'bdjobs') {
     if (!supabase) throw new Error('Configure Supabase to search Bdjobs.')
-    const keywords = (Array.isArray(criteria.keywords) ? criteria.keywords : [criteria.keywords]).map(k => k.trim()).filter(Boolean)
+    const keywords = (Array.isArray(criteria.keywords) ? criteria.keywords : [criteria.keywords])
+      .map(k => k.trim()).filter(Boolean)
+      .map(k => [k, criteria.workAuthorization].filter(Boolean).join(' '))
     const { data, error } = await supabase.functions.invoke('search-bdjobs', { body: { keywords, page } })
     if (error) {
       const detail = error.context instanceof Response ? await error.context.json().catch(() => null) : null
@@ -61,9 +78,7 @@ export async function searchJobs(criteria: SearchCriteria, token: string, page =
 }
 
 async function searchLocation(criteria: SearchCriteria, token: string, page: number): Promise<SearchResult> {
-  const keywords = Array.isArray(criteria.keywords)
-    ? criteria.keywords.map((keyword) => keyword.trim()).filter(Boolean).join(' OR ')
-    : (criteria.keywords || '').trim()
+  const keywords = searchKeywords(criteria)
   if (!keywords) throw new Error('Please add at least one keyword.')
   if (import.meta.env.DEV) return searchLocalLinkedIn(criteria, keywords, page)
   if (!supabase) throw new Error('Configure Supabase to search for jobs.')

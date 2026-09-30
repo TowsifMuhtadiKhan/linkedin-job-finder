@@ -10,7 +10,8 @@ import { supabase } from '../lib/supabase'
 import UploadedCVs from '../components/UploadedCVs'
 import TokenInput from '../components/TokenInput'
 import useAppStore from '../store/useAppStore'
-import { LinkedInLogo, BdjobsLogo } from '../components/PlatformLogos'
+import { JOB_PORTALS } from '../lib/jobPortals'
+import type { JobPortal } from '../lib/jobPortals'
 
 type TabType = 'profile' | 'cv' | 'settings'
 
@@ -261,7 +262,7 @@ export default function UploadCV() {
               <div>
                 <h2 className="text-lg font-bold text-gray-900">You are browsing as a Guest</h2>
                 <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mt-1">
-                  Sign in or create an account to store CVs permanently, keep saved jobs synced across devices, and unlock AI match reviews.
+                  Guest jobs are saved on this browser only. Sign in to view your account?s saved jobs, store CVs, and sync across devices.
                 </p>
               </div>
               <div className="pt-2">
@@ -385,32 +386,11 @@ export default function UploadCV() {
                   <span className="font-semibold text-gray-800 block">Default Job Source</span>
                   <span className="text-gray-400 text-xs">Choose which platform to query first</span>
                 </div>
-                <div className="inline-flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 self-start sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => updateCriteria('source', 'linkedin')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                      (criteria.source || 'linkedin') === 'linkedin'
-                        ? 'bg-white text-[#0A66C2] shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    <LinkedInLogo className="w-3.5 h-3.5" />
-                    <span>LinkedIn</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateCriteria('source', 'bdjobs')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                      criteria.source === 'bdjobs'
-                        ? 'bg-white text-rose-700 shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    <BdjobsLogo className="w-3.5 h-3.5" />
-                    <span>Bdjobs</span>
-                  </button>
-                </div>
+                <select aria-label="Default job source" value={criteria.source || 'linkedin'}
+                  onChange={(event) => updateCriteria('source', event.target.value as JobPortal)}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+                  {JOB_PORTALS.map(portal => <option key={portal.value} value={portal.value}>{portal.label}</option>)}
+                </select>
               </div>
 
               {/* Default View Mode */}

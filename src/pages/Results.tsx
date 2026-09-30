@@ -45,6 +45,8 @@ export default function Results() {
   const [error, setError] = useState('')
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(1)
+  const [nextPageToken, setNextPageToken] = useState<string>()
+  const [lastCriteria, setLastCriteria] = useState<typeof criteria>()
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
   // 10-min expiry timer (guests only)
@@ -80,11 +82,14 @@ export default function Results() {
 
     setIsLoading(true)
     setError('')
+    if (newPage === 1) { clearJobs(); setHasMore(false); setNextPageToken(undefined) }
 
     try {
-      const searchCriteria = overrideKeywords ? { ...criteria, keywords: overrideKeywords } : criteria
-      const result = await searchJobs(searchCriteria, linkedinToken, newPage)
+      const searchCriteria = newPage > 1 && lastCriteria ? lastCriteria : overrideKeywords ? { ...criteria, keywords: overrideKeywords } : criteria
+      const result = await searchJobs(searchCriteria, linkedinToken, newPage, newPage > 1 ? nextPageToken : undefined)
       const newJobs = result.jobs || []
+      setNextPageToken(result.nextPageToken)
+      setLastCriteria(searchCriteria)
       if (newPage === 1) {
         setJobs(newJobs)
         setSearchTimestamp(Date.now())
@@ -121,7 +126,7 @@ export default function Results() {
       {/* Top Bar with My Jobs button (no redundant second header) */}
       <div className="flex items-center justify-between pb-0.5">
         <div className="text-xs text-gray-400 font-medium hidden sm:block">
-          LinkedIn &amp; Bdjobs Search
+          Multiple Job Portals Search
         </div>
         <Link
           to="/saved"
@@ -273,7 +278,7 @@ export default function Results() {
       {jobs.length > 0 && <JobList jobs={jobs} viewMode={viewMode} />}
 
       {/* Load More Button */}
-      {jobs.length > 0 && hasMore && (
+      {searchTimestamp && hasMore && (
         <div className="text-center pt-2">
           <button
             onClick={handleLoadMore}
@@ -313,7 +318,7 @@ export default function Results() {
 
           <p className="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-5">
             {searchTimestamp
-              ? 'Try using broader keywords, changing location, or switching between LinkedIn and Bdjobs above.'
+              ? 'Try broader keywords or another location. For indexed portals, load more to check the next page.'
               : 'Enter job titles or skills above, or click one of the popular roles below to begin.'}
           </p>
 

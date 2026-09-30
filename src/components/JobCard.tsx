@@ -6,7 +6,8 @@ import {
 } from 'lucide-react'
 import { useSavedJobs } from '../hooks/useSavedJobs'
 import ReviewCVLink from './ReviewCVLink'
-import { LinkedInLogo, BdjobsLogo } from './PlatformLogos'
+import PlatformBadge from './PlatformBadge'
+import { portalLabel } from '../lib/jobPortals'
 
 function formatDate(dateStr: string) {
   if (!dateStr) return ''
@@ -87,17 +88,7 @@ function JobRow({ job }: { job: Job }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="font-semibold text-gray-900 text-sm truncate">{job.title}</p>
-          {job.source === 'bdjobs' || job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com') ? (
-            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-              <BdjobsLogo className="w-3 h-3" />
-              <span>Bdjobs</span>
-            </span>
-          ) : (
-            <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#0A66C2] border border-blue-200">
-              <LinkedInLogo className="w-3 h-3" />
-              <span>LinkedIn</span>
-            </span>
-          )}
+          <PlatformBadge job={job} />
         </div>
         <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-gray-500">
           {job.company && (
@@ -150,7 +141,6 @@ function JobRow({ job }: { job: Job }) {
 // ── Card view ─────────────────────────────────────────────────────────────────
 function JobCardView({ job }: { job: Job }) {
   const [copied, setCopied] = useState(false)
-  const isBdjobs = job.source === 'bdjobs' || job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com')
   const handleCopy = async () => {
     await navigator.clipboard.writeText(job.url).catch(() => {})
     setCopied(true)
@@ -179,16 +169,7 @@ function JobCardView({ job }: { job: Job }) {
               {job.title}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  isBdjobs
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                    : 'bg-blue-50 text-[#0A66C2] border border-blue-200'
-                }`}
-              >
-                {isBdjobs ? <BdjobsLogo className="w-3 h-3" /> : <LinkedInLogo className="w-3 h-3" />}
-                <span>{isBdjobs ? 'Bdjobs' : 'LinkedIn'}</span>
-              </span>
+              <PlatformBadge job={job} />
               {job.company && (
                 <p className="text-gray-700 text-sm font-medium truncate">{job.company}</p>
               )}
@@ -228,7 +209,7 @@ function JobCardView({ job }: { job: Job }) {
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0A66C2] hover:border-[#0A66C2] transition-colors"
-          title={job.id.startsWith('bdjobs:') ? 'View on Bdjobs' : 'View on LinkedIn'}
+          title={`View on ${portalLabel(job)}`}
         >
           <ExternalLink size={15} />
         </a>

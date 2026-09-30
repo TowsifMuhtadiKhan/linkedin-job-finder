@@ -10,7 +10,9 @@ export interface SelectOption {
 interface CustomSelectProps {
   value: string
   onChange: (value: string) => void
-  options: SelectOption[]
+  options: readonly SelectOption[]
+  disabled?: boolean
+  size?: 'default' | 'search'
   placeholder?: string
   icon?: React.ReactNode
   className?: string
@@ -27,6 +29,8 @@ export default function CustomSelect({
   className = '',
   menuWidth = 'w-44',
   ariaLabel,
+  disabled = false,
+  size = 'default',
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -65,10 +69,11 @@ export default function CustomSelect({
       <button
         type="button"
         aria-haspopup="listbox"
-        aria-expanded={isOpen}
+        aria-expanded={isOpen && !disabled}
+        disabled={disabled}
         aria-label={ariaLabel || displayLabel}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`h-8 px-3 rounded-lg border text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+        className={`${size === 'search' ? 'h-[42px] w-full md:w-auto' : 'h-8'} px-3 rounded-lg border text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
           isOpen
             ? 'border-[#0A66C2] ring-2 ring-[#0A66C2]/15 bg-white text-[#0A66C2]'
             : isSelectedActive
@@ -87,7 +92,7 @@ export default function CustomSelect({
       </button>
 
       {/* Dropdown Menu Panel */}
-      {isOpen && (
+      {isOpen && !disabled && (
         <div
           role="listbox"
           className={`absolute left-0 mt-1.5 ${menuWidth} bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}

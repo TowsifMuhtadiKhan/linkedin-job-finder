@@ -1,5 +1,7 @@
 import type { Job, LinkedInProfile, SearchCriteria, ViewMode } from '../types'
 interface AppState {
+  savedJobsOwner: string | null; savedJobsEpoch: number; guestJobs: Job[]; legacySavedJobs: Job[]
+  setSavedJobsOwner: (owner: string | null) => void
   linkedinToken: string; setLinkedinToken: (token: string) => void; clearLinkedinToken: () => void
   profile: LinkedInProfile | null; setProfile: (profile: LinkedInProfile) => void; clearProfile: () => void
   criteria: SearchCriteria; setCriteria: (criteria: SearchCriteria) => void
@@ -67,6 +69,15 @@ const useAppStore = create<AppState>()(
       setViewMode: (mode) => set({ viewMode: mode }),
 
       // ── Saved / Favourite Jobs ─────────────────────────────────────
+      savedJobsOwner: null,
+      savedJobsEpoch: 0,
+      guestJobs: [],
+      legacySavedJobs: [],
+      setSavedJobsOwner: (owner) => set((state) => {
+        if (state.savedJobsOwner === owner) return state
+        const guestJobs = state.savedJobsOwner === null ? state.savedJobs : state.guestJobs
+        return { savedJobsOwner: owner, savedJobsEpoch: state.savedJobsEpoch + 1, guestJobs, savedJobs: owner === null ? guestJobs : [] }
+      }),
       savedJobs: [],
       setSavedJobs: (jobs) => set({ savedJobs: jobs }),
       saveJob: (job) => {
@@ -85,11 +96,21 @@ const useAppStore = create<AppState>()(
     }),
     {
       name: 'linkedin-job-finder-v2',
+      version: 1,
+      migrate: (persisted) => {
+        const old = persisted as AppState
+        return { ...old, legacySavedJobs: old.savedJobs || [], savedJobs: [], guestJobs: [] }
+      },
+      merge: (persisted, current) => {
+        const stored = (persisted || {}) as Partial<AppState>
+        return { ...current, ...stored, savedJobsOwner: null, savedJobsEpoch: 0, savedJobs: stored.guestJobs || [] }
+      },
       partialize: (state) => ({
         linkedinToken: state.linkedinToken,
         profile: state.profile,
         criteria: state.criteria,
-        savedJobs: state.savedJobs,
+        guestJobs: state.savedJobsOwner === null ? state.savedJobs : state.guestJobs,
+        legacySavedJobs: state.legacySavedJobs,
         viewMode: state.viewMode,
       }),
     }

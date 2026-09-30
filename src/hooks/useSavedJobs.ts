@@ -1,3 +1,4 @@
+import { jobPortal } from '../lib/jobPortals'
 import type { Job, Database } from '../types'
 import { useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -18,13 +19,15 @@ export function useSavedJobs() {
   useEffect(() => {
     if (!user || !supabase) return
 
+    let cancelled = false
+    const epoch = useAppStore.getState().savedJobsEpoch
     supabase
       .from('saved_jobs')
       .select('*')
       .eq('user_id', user.id)
       .order('saved_at', { ascending: false })
       .then(({ data }) => {
-        if (data) {
+        if (data && !cancelled && useAppStore.getState().savedJobsEpoch === epoch) {
           const mapped = data.map((row) => ({
             id: row.job_id,
             title: row.title,
@@ -36,18 +39,20 @@ export function useSavedJobs() {
             savedAt: row.saved_at,
             appliedAt: row.applied_at,
             deadline: row.deadline,
-            source: ((row as { source?: string | null }).source as 'linkedin' | 'bdjobs') ||
-              (row.url?.includes('bdjobs.com') || row.job_id?.startsWith('bdjobs:') ? 'bdjobs' : 'linkedin'),
+            source: jobPortal({ source: row.source, id: row.job_id, url: row.url }),
           }))
           setSavedJobs(mapped)
         }
       })
+    return () => { cancelled = true }
   }, [user, setSavedJobs])
 
   const saveJob = useCallback(
     async (job: Job) => {
       if (authLoading) throw new Error('Please wait for your account to finish loading.')
-      const jobSource = job.source || (job.url?.includes('bdjobs.com') || job.id?.startsWith('bdjobs:') ? 'bdjobs' : 'linkedin')
+      const epoch = useAppStore.getState().savedJobsEpoch
+      if (useAppStore.getState().savedJobsOwner !== (user?.id ?? null)) throw new Error('Your account changed. Please try again.')
+      const jobSource = jobPortal(job)
 
       if (user && supabase) {
         const payload: Database['public']['Tables']['saved_jobs']['Insert'] = {
@@ -72,6 +77,7 @@ export function useSavedJobs() {
         }
         if (error) throw new Error('Could not save this job. Please try again.')
       }
+      if (useAppStore.getState().savedJobsEpoch !== epoch) return
       saveLocal({ ...job, source: jobSource })
     },
     [user, authLoading, saveLocal]
@@ -80,6 +86,8 @@ export function useSavedJobs() {
   const unsaveJob = useCallback(
     async (jobId: string) => {
       if (authLoading) throw new Error('Please wait for your account to finish loading.')
+      const epoch = useAppStore.getState().savedJobsEpoch
+      if (useAppStore.getState().savedJobsOwner !== (user?.id ?? null)) throw new Error('Your account changed. Please try again.')
       if (user && supabase) {
         const { error } = await supabase
           .from('saved_jobs')
@@ -88,6 +96,7 @@ export function useSavedJobs() {
           .eq('job_id', jobId)
         if (error) throw new Error('Could not remove this job. Please try again.')
       }
+      if (useAppStore.getState().savedJobsEpoch !== epoch) return
       unsaveLocal(jobId)
     },
     [user, authLoading, unsaveLocal]
@@ -95,6 +104,8 @@ export function useSavedJobs() {
 
   const updateSavedJob = useCallback(async (jobId: string, changes: Pick<Job, 'appliedAt' | 'deadline'>) => {
     if (authLoading) throw new Error('Please wait for your account to finish loading.')
+      const epoch = useAppStore.getState().savedJobsEpoch
+      if (useAppStore.getState().savedJobsOwner !== (user?.id ?? null)) throw new Error('Your account changed. Please try again.')
     if (user && supabase) {
       const updates = {
         ...(changes.appliedAt !== undefined ? { applied_at: changes.appliedAt } : {}),
@@ -104,8 +115,9 @@ export function useSavedJobs() {
         .eq('user_id', user.id).eq('job_id', jobId).select('job_id').single()
       if (error || !data) throw new Error('Could not save your changes. Please try again.')
     }
+    if (useAppStore.getState().savedJobsEpoch !== epoch) return
     useAppStore.getState().updateSavedJob(jobId, changes)
   }, [user, authLoading])
 
-  return { savedJobs, saveJob, unsaveJob, isJobSaved, updateSavedJob, authLoading }
+  return { isGuest: !user, savedJobs, saveJob, unsaveJob, isJobSaved, updateSavedJob, authLoading }
 }

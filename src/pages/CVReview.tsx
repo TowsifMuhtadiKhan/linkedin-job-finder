@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
@@ -19,7 +19,8 @@ export default function CVReview() {
 
 function ReviewForm({ initialUrl }: { initialUrl: string }) {
   const [url, setUrl] = useState(initialUrl)
-  const [description, setDescription] = useState('')
+  const route = useLocation()
+  const [description, setDescription] = useState(typeof route.state?.description === 'string' ? route.state.description : '')
   const [cv, setCV] = useState('')
   const [files, setFiles] = useState<StoredCV[]>([])
   const [selected, setSelected] = useState('')
@@ -87,7 +88,7 @@ function ReviewForm({ initialUrl }: { initialUrl: string }) {
       <div><h1 className="text-2xl font-bold">CV & job match</h1><p className="text-sm text-gray-500 mt-2">Compare your CV with a job description and get practical, free feedback.</p></div>
       <div className="card p-6 space-y-4">
         <h2 className="text-lg font-semibold">1. Job description</h2>
-        <label className="block text-sm" htmlFor="job-url">LinkedIn or Bdjobs job URL</label>
+        <label className="block text-sm" htmlFor="job-url">Job URL (automatic fetch supports LinkedIn and Bdjobs)</label>
         <div className="flex flex-wrap gap-2"><input id="job-url" type="url" value={url} onChange={e => setUrl(e.target.value)} disabled={!!busy} className={`${inputClass} flex-1 min-w-0`} placeholder="https://www.linkedin.com/jobs/view/…" />
           <button type="button" disabled={!!busy || !url} onClick={() => void fetchDescription()} className="btn-primary disabled:opacity-50">{busy === 'description' ? 'Fetching…' : 'Get description'}</button></div>
         <label htmlFor="job-description" className="block text-sm">Review the fetched description, or paste it here</label>

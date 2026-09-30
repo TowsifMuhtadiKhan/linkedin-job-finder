@@ -62,7 +62,7 @@ export default function Auth() {
         <img src="/logo.png" alt="Job Finder" width={80} height={80} className="w-20 h-20 object-contain mx-auto mb-4 rounded-xl" />
         <h1 className="text-2xl font-bold text-gray-900">Job Finder</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Search jobs from LinkedIn &amp; Bdjobs, save favourites, and track applications
+          Search jobs from Multiple Job Portals, save favourites, and track applications
         </p>
       </div>
 

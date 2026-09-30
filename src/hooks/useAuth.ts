@@ -1,8 +1,10 @@
 import type { User } from '@supabase/supabase-js'
-import { useState, useEffect, useCallback } from 'react'
+import { createContext, createElement, useContext, useState, useEffect, useCallback } from 'react'
+import type { ReactNode } from 'react'
+import useAppStore from '../store/useAppStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
-export function useAuth() {
+function useAuthSession() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -12,15 +14,11 @@ export function useAuth() {
       return
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      useAppStore.getState().setSavedJobsOwner(session?.user.id ?? null)
       setUser(session?.user ?? null)
       setLoading(false)
     })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null)
-    })
-
     return () => subscription.unsubscribe()
   }, [])
 
@@ -37,8 +35,21 @@ export function useAuth() {
   }, [])
 
   const signOut = useCallback(async () => {
-    await supabase?.auth.signOut()
+    const result = await supabase?.auth.signOut()
+    if (result?.error) throw result.error
   }, [])
 
   return { user, loading, signIn, signUp, signOut }
+}
+
+const AuthContext = createContext<ReturnType<typeof useAuthSession> | null>(null)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuthSession()
+  return createElement(AuthContext.Provider, { value: auth },
+    auth.loading ? createElement('p', { role: 'status', className: 'p-6 text-center text-gray-500' }, 'Loading your account?') : children)
+}
+export function useAuth() {
+  const auth = useContext(AuthContext)
+  if (!auth) throw new Error('useAuth requires AuthProvider')
+  return auth
 }

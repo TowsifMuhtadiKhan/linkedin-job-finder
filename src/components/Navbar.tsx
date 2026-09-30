@@ -47,7 +47,7 @@ export default function Navbar() {
               Job <span className="text-[#0A66C2]">Finder</span>
             </span>
             <span className="block text-[10px] text-gray-400 font-medium leading-none">
-              LinkedIn &amp; Bdjobs
+              Multiple Job Portals
             </span>
           </div>
         </Link>

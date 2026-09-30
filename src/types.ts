@@ -1,5 +1,8 @@
+import type { JobPortal } from './lib/jobPortals'
+
 export interface SearchCriteria {
-  source?: 'linkedin' | 'bdjobs'
+  source?: JobPortal
+  workAuthorization?: string
   keywords: string[] | string
   location: string
   jobType: string
@@ -15,13 +18,14 @@ export interface Job {
   postedDate: string | null
   url: string
   logo: string | null
-  source?: 'linkedin' | 'bdjobs'
+  source?: JobPortal
+  description?: string | null
   savedAt?: string
   appliedAt?: string | null
   deadline?: string | null
 }
 export interface LinkedInProfile { name: string; email?: string; picture?: string }
-export interface SearchResult { jobs: Job[]; total: number; hasMore: boolean }
+export interface SearchResult { jobs: Job[]; total: number; hasMore: boolean; nextPageToken?: string }
 export type ViewMode = 'card' | 'list'
 export type SavedJobRow = {
   id: string; user_id: string; job_id: string; title: string; company: string | null

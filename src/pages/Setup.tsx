@@ -49,7 +49,7 @@ export default function Setup() {
           Find Your Next <span className="text-[#0077B5]">Job</span>
         </h1>
         <p className="text-gray-500 text-sm">
-          Search matching jobs across LinkedIn &amp; Bdjobs with direct apply links.
+          Search matching jobs across Multiple Job Portals with direct apply links.
         </p>
       </div>
 

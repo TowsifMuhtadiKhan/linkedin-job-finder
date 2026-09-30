@@ -8,7 +8,8 @@ import { useSavedJobs } from '../hooks/useSavedJobs'
 import type { Job } from '../types'
 import ReviewCVLink from '../components/ReviewCVLink'
 import useAppStore from '../store/useAppStore'
-import { LinkedInLogo, BdjobsLogo } from '../components/PlatformLogos'
+import PlatformBadge from '../components/PlatformBadge'
+import { portalLabel } from '../lib/jobPortals'
 import CustomSelect from '../components/CustomSelect'
 
 function formatDate(value: string) {
@@ -77,8 +78,6 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
     }
   }
 
-  const isBdjobs =
-    job.source === 'bdjobs' || job.id.startsWith('bdjobs:') || job.url.includes('bdjobs.com')
 
   // ── CARD VIEW ──────────────────────────────────────────
   if (viewMode === 'card') {
@@ -107,16 +106,7 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
               </h3>
 
               <div className="flex items-center gap-1.5 flex-wrap my-1.5">
-                <span
-                  className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    isBdjobs
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                      : 'bg-blue-50 text-[#0A66C2] border border-blue-200'
-                  }`}
-                >
-                  {isBdjobs ? <BdjobsLogo className="w-3 h-3" /> : <LinkedInLogo className="w-3 h-3" />}
-                  <span>{isBdjobs ? 'Bdjobs' : 'LinkedIn'}</span>
-                </span>
+                <PlatformBadge job={job} />
                 <span
                   className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
                     job.appliedAt ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-600'
@@ -137,8 +127,8 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={`View on ${isBdjobs ? 'Bdjobs' : 'LinkedIn'}`}
-                aria-label={`View on ${isBdjobs ? 'Bdjobs' : 'LinkedIn'}`}
+                title={`View on ${portalLabel(job)}`}
+                aria-label={`View on ${portalLabel(job)}`}
                 className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:text-[#0A66C2] hover:border-[#0A66C2] transition-colors"
               >
                 <ExternalLink size={13} />
@@ -298,16 +288,7 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
               <h3 className="font-semibold text-gray-900 text-sm hover:text-[#0A66C2] transition-colors">
                 {job.title}
               </h3>
-              <span
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  isBdjobs
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                    : 'bg-blue-50 text-[#0A66C2] border border-blue-200'
-                }`}
-              >
-                {isBdjobs ? <BdjobsLogo className="w-3 h-3" /> : <LinkedInLogo className="w-3 h-3" />}
-                <span>{isBdjobs ? 'Bdjobs' : 'LinkedIn'}</span>
-              </span>
+              <PlatformBadge job={job} />
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                   job.appliedAt ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600'
@@ -428,8 +409,8 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
-            title={`View on ${isBdjobs ? 'Bdjobs' : 'LinkedIn'}`}
-            aria-label={`View ${job.title} on ${isBdjobs ? 'Bdjobs' : 'LinkedIn'}`}
+            title={`View on ${portalLabel(job)}`}
+            aria-label={`View ${job.title} on ${portalLabel(job)}`}
             className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-[#0A66C2] hover:border-[#0A66C2] transition-colors"
           >
             <ExternalLink size={14} />
@@ -452,7 +433,7 @@ function SavedJobItem({ job, update, remove, disabled, viewMode }: SavedJobCardP
 }
 
 export default function Saved() {
-  const { savedJobs, unsaveJob, updateSavedJob, authLoading } = useSavedJobs()
+  const { isGuest, savedJobs, unsaveJob, updateSavedJob, authLoading } = useSavedJobs()
   const { viewMode, setViewMode } = useAppStore()
 
   const [filter, setFilter] = useState<'all' | 'not-applied' | 'applied'>('all')
@@ -490,7 +471,7 @@ export default function Saved() {
         <BookmarkCheck size={36} className="text-gray-300 mx-auto mb-4" />
         <h2 className="text-lg font-bold text-gray-900 mb-1">No saved jobs yet</h2>
         <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-          Click the bookmark or star icon on any search result to track your favourite opportunities here.
+          {isGuest ? 'Sign in to view your account?s jobs, or bookmark search results to save them on this browser.' : 'Click the bookmark or star icon on any search result to track your favourite opportunities here.'}
         </p>
         <Link to="/" className="btn-primary inline-flex items-center gap-2">
           Search Opportunities
@@ -508,7 +489,7 @@ export default function Saved() {
             <BookmarkCheck size={22} className="text-[#0A66C2]" /> My Jobs
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            Track your applications, check CV compatibility, and manage deadlines.
+            {isGuest ? 'Saved on this browser only. Sign in to view your account?s saved jobs.' : 'Track your applications, check CV compatibility, and manage deadlines.'}
           </p>
         </div>
 

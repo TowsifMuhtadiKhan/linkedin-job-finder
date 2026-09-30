@@ -2,7 +2,8 @@ import type { FormEvent } from 'react'
 import { RotateCcw, Globe, Search } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import KeywordsInput from './KeywordsInput'
-import { LinkedInLogo, BdjobsLogo } from './PlatformLogos'
+import { JOB_PORTALS, WORK_AUTHORIZATIONS, isProviderPortal } from '../lib/jobPortals'
+import type { JobPortal } from '../lib/jobPortals'
 import CustomSelect from './CustomSelect'
 
 const JOB_TYPES = [
@@ -56,45 +57,16 @@ export default function CriteriaForm({
       <form onSubmit={handleSubmit} className="space-y-2.5">
         {/* Line 1: Primary Search Bar (Platform Toggle, Keywords, Location, Search Button) */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
-          {/* Source Toggle */}
-          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-0.5 shrink-0 h-[42px] items-center">
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => updateCriteria('source', 'linkedin')}
-              className={`h-full px-3.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                isLinkedIn
-                  ? 'bg-white text-[#0A66C2] shadow-xs'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <LinkedInLogo className="w-3.5 h-3.5" />
-              <span>LinkedIn</span>
-            </button>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() =>
-                useAppStore.getState().setCriteria({
-                  ...criteria,
-                  source: 'bdjobs',
-                  location: '',
-                  remote: false,
-                  jobType: '',
-                  experience: '',
-                  datePosted: '',
-                })
-              }
-              className={`h-full px-3.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                criteria.source === 'bdjobs'
-                  ? 'bg-white text-rose-700 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <BdjobsLogo className="w-3.5 h-3.5" />
-              <span>Bdjobs</span>
-            </button>
-          </div>
+          <CustomSelect
+            ariaLabel="Job portal"
+            disabled={isLoading}
+            value={criteria.source || 'linkedin'}
+            onChange={(value) => updateCriteria('source', value as JobPortal)}
+            options={JOB_PORTALS}
+            className="shrink-0"
+            menuWidth="w-44"
+            size="search"
+          />
 
           {/* Keywords Tag Input */}
           <div className="flex-1 min-w-[200px]">
@@ -108,7 +80,7 @@ export default function CriteriaForm({
           </div>
 
           {/* Location Input (LinkedIn only) */}
-          {isLinkedIn && (
+          {criteria.source !== 'bdjobs' && (
             <div className="w-full md:w-56 lg:w-64 shrink-0">
               <KeywordsInput
                 label="Location"
@@ -118,7 +90,7 @@ export default function CriteriaForm({
                   .map((value) => value.trim())
                   .filter(Boolean)}
                 onChange={(locations) => updateCriteria('location', locations.join(', '))}
-                disabled={criteria.remote}
+                disabled={isLinkedIn && criteria.remote}
                 category="location"
               />
             </div>
@@ -198,9 +170,14 @@ export default function CriteriaForm({
             </>
           ) : (
             <span className="text-xs text-gray-500">
-              Searching Bdjobs across Bangladesh. Multiple keywords can be entered.
+              {isProviderPortal(criteria.source) ? 'Search indexed listings here. Availability depends on the connected job-data service.' : 'Searching Bdjobs across Bangladesh. Multiple keywords can be entered.'}
             </span>
           )}
+
+          <CustomSelect value={criteria.workAuthorization || ''}
+            onChange={(value) => updateCriteria('workAuthorization', value)}
+            options={WORK_AUTHORIZATIONS} ariaLabel="Work authorization filter" menuWidth="w-52" />
+          {criteria.workAuthorization && <span className="text-xs text-gray-500">Matches authorization keywords; confirm eligibility in the listing.</span>}
 
           {/* Reset Filters on the far right */}
           <div className="ml-auto flex items-center">

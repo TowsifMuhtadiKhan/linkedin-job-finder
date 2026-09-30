@@ -141,3 +141,13 @@ vercel.json         Frontend deployment configuration
 - A missing production function can appear as a CORS error or a failed Edge Function request.
 
 This is an independent project and is not affiliated with or endorsed by LinkedIn.
+
+### Additional job portals and work authorization
+
+Indeed, Glassdoor, Handshake, and ZipRecruiter now use the in-app results list, save controls, and application tracking. Searching never opens an external tab. Apply/View links still open the actual posting, as they do for LinkedIn and Bdjobs.
+
+These four sources require the new Supabase function search-portals and a server-only SEARCHAPI_API_KEY secret. Deploy the function from supabase/functions/search-portals using your normal Supabase deployment workflow, and add the secret under Edge Functions ? Secrets in the Supabase dashboard. Never put this key in a VITE variable or client code. No key is included or configured by this change; until configured, searches show an explicit service-unavailable message.
+
+The adapter uses [SearchAPI Google Jobs](https://www.searchapi.io/docs/google-jobs). It displays only indexed jobs with an HTTPS application URL on the selected portal's domain, not other boards. This is indexed coverage, not a complete copy of any portal; private Handshake listings cannot be retrieved. Some pages may have no matches while subsequent pages do; Load more follows the provider's pagination token. Missing dates and logos are left blank rather than invented. LinkedIn-specific remote/type/experience/date filters remain limited to LinkedIn.
+
+OPT, CPT, STEM OPT, and H1B are keyword filters, not verification of sponsorship or eligibility. The selection persists with search preferences and Reset clears it.
