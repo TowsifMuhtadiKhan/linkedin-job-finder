@@ -26,3 +26,24 @@ test('missing sections yield specific improvement suggestions', () => {
   assert.ok(result.suggestions.some(s => s.includes('email address')))
   assert.ok(result.suggestions.some(s => s.includes('Do not invent')))
 })
+
+test('ignores marketing words and matches known skill aliases', () => {
+  const result = analyzeCV(cv + ' Amazon Web Services and Nodejs services.', description + ' AWS Node.js. Join our exciting global marketplace in America and Europe. Commerce shopping future passion.')
+  assert.ok(result.matched.includes('aws'))
+  assert.ok(result.matched.includes('node.js'))
+  assert.ok(!result.missing.includes('commerce'))
+  assert.ok(result.evidence.find(item => item.skill === 'aws').excerpt.includes('Amazon Web Services'))
+})
+
+test('does not invent a score for unsupported skills', () => {
+  const result = analyzeCV(cv, 'We need a specialist with extensive knowledge of rare historical manuscripts, archival preservation techniques, and museum collections.')
+  assert.equal(result.matchScore, null)
+  assert.deepEqual(result.missing, [])
+})
+
+test('skill boundaries distinguish Java from JavaScript and punctuation in C++', () => {
+  const result = analyzeCV(cv + ' C++ development.', description + ' Java and C++ are required. NodeXjs is not a recognized technology.')
+  assert.ok(result.matched.includes('c++'))
+  assert.ok(result.missing.includes('java'))
+  assert.ok(!result.missing.includes('node.js'))
+})

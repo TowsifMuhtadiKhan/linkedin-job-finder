@@ -1,3 +1,4 @@
+import CVExtraction from './CVExtraction'
 import { useEffect, useState } from 'react'
 import { getCV } from '../lib/cvStorage'
 
@@ -13,6 +14,7 @@ export default function UploadedCVs({ revision }: { revision: number }) {
   const [selected, setSelected] = useState<CV | null>(null)
   const [preview, setPreview] = useState('')
   const [previewError, setPreviewError] = useState('')
+  const [extracting, setExtracting] = useState<CV | null>(null)
 
   useEffect(() => {
     let active = true
@@ -51,14 +53,16 @@ export default function UploadedCVs({ revision }: { revision: number }) {
       {error && <p role="alert" className="text-sm text-red-600 mt-3">{error}</p>}
       {!loading && !error && files.length === 0 && <p className="text-sm text-gray-500 mt-4">No CVs uploaded yet. Your successful uploads will appear here.</p>}
       <ul className="divide-y divide-gray-100 mt-3">
-        {files.map(cv => <li key={cv.id} className="py-3 flex items-center gap-3 justify-between">
+        {files.map(cv => <li key={cv.id} className="py-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <div className="min-w-0"><p className="font-medium text-sm break-all">{cv.name}</p>
             <p className="text-xs text-gray-500 mt-1">{new Date(cv.createdTime).toLocaleString()}{cv.size ? ` · ${(Number(cv.size) / 1024).toFixed(0)} KB` : ''}</p></div>
-          <button type="button" onClick={() => setSelected(cv)} className="shrink-0 text-sm text-[#0077B5] border border-[#0077B5] rounded-full px-3 py-1.5">View CV</button>
+          <div className="flex shrink-0 flex-wrap gap-2"><button type="button" onClick={() => setExtracting(cv)} className="text-sm text-[#0077B5] border border-[#0077B5] rounded-full px-3 py-1.5">Extract data</button>
+          <button type="button" onClick={() => setSelected(cv)} className="shrink-0 text-sm text-[#0077B5] border border-[#0077B5] rounded-full px-3 py-1.5">View CV</button></div>
         </li>)}
       </ul>
       {loading && <p role="status" className="text-sm text-gray-500 mt-3">Loading your CVs…</p>}
       {!loading && pageToken && <button type="button" onClick={() => setPage(pageToken)} className="text-sm text-[#0077B5] mt-3">Load more</button>}
+      {extracting && <div><button type="button" onClick={() => setExtracting(null)} className="text-xs text-gray-500 mt-4">Close extraction</button><CVExtraction key={extracting.id} stored={extracting} /></div>}
       {selected && <div className="mt-5 border-t border-gray-200 pt-4">
         <div className="flex items-center justify-between gap-3 mb-3"><h3 className="font-semibold text-sm break-all">{selected.name}</h3>
           <button type="button" onClick={() => setSelected(null)} className="text-sm text-gray-500">Close</button></div>

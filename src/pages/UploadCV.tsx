@@ -1,3 +1,4 @@
+import CVExtraction from '../components/CVExtraction'
 import { useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
@@ -338,6 +339,8 @@ export default function UploadCV() {
                     </p>
                   )}
                 </div>
+
+                {file && <CVExtraction key={`${user.id}-${file.name}-${file.lastModified}`} file={file} />}
 
                 <p className="text-xs text-gray-400">
                   Your CV will be stored securely with your account and can be reviewed against job descriptions.
